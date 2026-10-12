@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+
 # Bacolod eGov Portal
 
 A responsive React implementation based on the supplied PNG designs. It includes service discovery, tourism, waste schedules, job and bid listings, local businesses, civic engagement, Firestore reads, and request submission through a callable Firebase Cloud Function.
@@ -21,5 +22,7 @@ Without an `.env`, the interface runs in demo mode and returns a local demo refe
 
 The callable function `submitServiceRequest` validates requests and writes them to the private `serviceRequests` collection. Public site content can be managed in the `announcements`, `services`, and `destinations` collections.
 =======
+
 # BacolodWeb
->>>>>>> origin/main
+
+> > > > > > > origin/main
