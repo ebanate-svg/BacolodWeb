@@ -13,27 +13,37 @@ const config = {
 
 export const firebaseReady = Boolean(config.apiKey && config.projectId && config.appId)
 const app = firebaseReady ? initializeApp(config) : null
-const functions = app ? getFunctions(app, import.meta.env.VITE_FIREBASE_FUNCTIONS_REGION || 'asia-southeast1') : null
+const functions = app
+  ? getFunctions(app, import.meta.env.VITE_FIREBASE_FUNCTIONS_REGION || 'asia-southeast1')
+  : null
 
 type LatestNewsResponse = { items: NewsItem[] }
+export type NewsFeedResult = { items: NewsItem[]; isLive: boolean }
 
-export async function loadLatestNews(fallback: NewsItem[]): Promise<NewsItem[]> {
-  if (!functions) return fallback
+export async function loadLatestNews(fallback: NewsItem[]): Promise<NewsFeedResult> {
+  if (!functions) return { items: fallback, isLive: false }
   try {
     const callable = httpsCallable<void, LatestNewsResponse>(functions, 'getLatestNews')
     const { data } = await callable()
-    return Array.isArray(data.items) && data.items.length > 0 ? data.items : fallback
+    return Array.isArray(data.items) && data.items.length > 0
+      ? { items: data.items, isLive: true }
+      : { items: fallback, isLive: false }
   } catch (error) {
     console.warn('Using local news data because the production feed is unavailable.', error)
-    return fallback
+    return { items: fallback, isLive: false }
   }
 }
 
-export async function submitRequest(payload: Record<string, string>): Promise<{ reference: string; demo?: boolean }> {
+export async function submitRequest(
+  payload: Record<string, string>,
+): Promise<{ reference: string; demo?: boolean }> {
   if (!functions) {
     await new Promise((resolve) => setTimeout(resolve, 550))
     return { reference: `DEMO-${Date.now().toString().slice(-7)}`, demo: true }
   }
-  const callable = httpsCallable<Record<string, string>, { reference: string }>(functions, 'submitServiceRequest')
+  const callable = httpsCallable<Record<string, string>, { reference: string }>(
+    functions,
+    'submitServiceRequest',
+  )
   return (await callable(payload)).data
 }
