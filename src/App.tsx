@@ -3,7 +3,7 @@ import { Link, NavLink, Route, Routes, useLocation, useNavigate } from 'react-ro
 import { bidItems, businesses, jobs, news as fallbackNews, services, type NewsItem } from './data'
 import { firebaseReady, loadLatestNews, submitRequest } from './firebase'
 
-const asset = (name: string) => `/images/${name}`
+const asset = (name: string) => `${import.meta.env.BASE_URL}images/${name}`
 const formatNewsDate = (value: string) => {
   const date = new Date(value)
   return Number.isNaN(date.getTime())
