@@ -1,5 +1,6 @@
 export type Service = { id: string; icon: string; title: string; description: string; href: string }
 export type NewsItem = { id: string; category: string; date: string; title: string; copy: string; image: string; url?: string }
+const asset = (name: string) => `${import.meta.env.BASE_URL}images/${name}`
 
 export const services: Service[] = [
   { id: 'bplo', icon: '▥', title: 'BPLO', description: 'Business permits, renewals, and registrations.', href: '/services/bplo' },
@@ -8,9 +9,9 @@ export const services: Service[] = [
 ]
 
 export const news: NewsItem[] = [
-  { id: '1', category: 'Festival', date: 'Oct 1, 2026', title: 'MassKara Festival 2026', copy: 'Celebrate Bacolod’s world-famous festival of smiles with parades and live performances.', image: '/images/news1.png' },
-  { id: '2', category: 'Health', date: 'Nov 5, 2026', title: 'Free Health Checkup Caravan', copy: 'Participate in the city health and wellness outreach program.', image: '/images/news2.png' },
-  { id: '3', category: 'Environment', date: 'Dec 2, 2026', title: 'Clean and Green Bacolod Drive', copy: 'Join the citywide cleanup and tree-planting campaign.', image: '/images/news3.png' },
+  { id: '1', category: 'Festival', date: 'Oct 1, 2026', title: 'MassKara Festival 2026', copy: 'Celebrate Bacolod’s world-famous festival of smiles with parades and live performances.', image: asset('news1.png') },
+  { id: '2', category: 'Health', date: 'Nov 5, 2026', title: 'Free Health Checkup Caravan', copy: 'Participate in the city health and wellness outreach program.', image: asset('news2.png') },
+  { id: '3', category: 'Environment', date: 'Dec 2, 2026', title: 'Clean and Green Bacolod Drive', copy: 'Join the citywide cleanup and tree-planting campaign.', image: asset('news3.png') },
 ]
 
 export const jobs = [
