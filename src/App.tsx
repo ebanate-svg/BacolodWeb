@@ -1,4 +1,4 @@
-import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react'
+import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { bidItems, businesses, jobs, news as fallbackNews, services, type NewsItem } from './data'
 import { firebaseReady, loadLatestNews, submitRequest } from './firebase'
@@ -193,6 +193,53 @@ function Title({
   )
 }
 
+function DeferredSection({
+  children,
+  className,
+  id,
+  minHeight = 320,
+}: {
+  children: ReactNode
+  className: string
+  id?: string
+  minHeight?: number
+}) {
+  const sectionRef = useRef<HTMLElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section || typeof IntersectionObserver === 'undefined') {
+      setIsVisible(true)
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '320px 0px', threshold: 0.01 },
+    )
+
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <section
+      ref={sectionRef}
+      id={id}
+      className={`${className} deferred-section ${isVisible ? 'is-visible' : 'is-waiting'}`}
+      style={!isVisible ? { minHeight } : undefined}
+    >
+      {isVisible ? children : <span className="section-loader" aria-hidden="true" />}
+    </section>
+  )
+}
+
 function Home() {
   const [news, setNews] = useState<NewsItem[]>(fallbackNews)
   const [newsIsLive, setNewsIsLive] = useState(false)
@@ -215,6 +262,7 @@ function Home() {
       <section className="landing-hero">
         <img src={asset('slider1.png')} alt="MassKara Festival dancers" />
         <div>
+          <span className="hero-kicker">✦ Bacolod City Digital Services</span>
           <h1>
             Empowering Bacolod
             <br />
@@ -224,14 +272,24 @@ function Home() {
             Access essential city services and updates from your computer or mobile device—anytime,
             anywhere.
           </p>
-          <Link className="button button-outline" to="/services">
-            Get Started
-          </Link>
+          <div className="hero-meta" aria-label="Portal highlights">
+            <span>◷ 24/7 Access</span>
+            <span>⌖ Bacolod City</span>
+            <span>♡ Citizen First</span>
+          </div>
+          <div className="hero-actions">
+            <Link className="button" to="/services">
+              Explore Services
+            </Link>
+            <Link className="button button-outline" to="/tourism">
+              Discover Bacolod
+            </Link>
+          </div>
         </div>
         <img src={asset('slider2.png')} alt="Bacolod community" />
       </section>
       <AppDownloadBadges />
-      <section className="portal-section page-width">
+      <DeferredSection className="portal-section page-width" minHeight={360}>
         <div>
           <h2>
             One City.
@@ -314,8 +372,8 @@ function Home() {
             </Link>
           </div>
         </div>
-      </section>
-      <section className="benefits-section">
+      </DeferredSection>
+      <DeferredSection className="benefits-section" minHeight={300}>
         <Title
           title="Why Choose eGov?"
           description="Experience seamless digital governance at your fingertips"
@@ -338,10 +396,10 @@ function Home() {
             </article>
           ))}
         </div>
-      </section>
-      <section className="mayor-section page-width">
+      </DeferredSection>
+      <DeferredSection className="mayor-section page-width" minHeight={440}>
         <div className="mayor-portrait">
-          <img src={asset('mayor1.png')} alt="Mayor Greg Gasataya" />
+          <img src={asset('mayor1.png')} alt="Mayor Greg Gasataya" loading="lazy" />
         </div>
         <div className="mayor-copy">
           <span className="eyebrow">
@@ -368,8 +426,8 @@ function Home() {
             <strong>— Mayor Greg Gasataya</strong>
           </blockquote>
         </div>
-      </section>
-      <section className="city-stats">
+      </DeferredSection>
+      <DeferredSection className="city-stats" minHeight={180}>
         <div className="page-width">
           {[
             ['CITIZENS', '624,787'],
@@ -383,8 +441,8 @@ function Home() {
             </div>
           ))}
         </div>
-      </section>
-      <section className="discover-section">
+      </DeferredSection>
+      <DeferredSection className="discover-section" minHeight={850}>
         <div className="discover-card page-width">
           <div className="discover-copy">
             <span className="eyebrow">
@@ -410,7 +468,7 @@ function Home() {
           </div>
           <div className="discover-images">
             <figure className="discover-featured">
-              <img src={asset('slider1.png')} alt="MassKara Festival dancers" />
+              <img src={asset('slider1.png')} alt="MassKara Festival dancers" loading="lazy" />
               <span>Featured</span>
               <figcaption>
                 <b>MassKara Festival</b>
@@ -420,13 +478,13 @@ function Home() {
               </figcaption>
             </figure>
             <figure>
-              <img src={asset('inasal.jpg')} alt="Bacolod chicken inasal" />
+              <img src={asset('inasal.jpg')} alt="Bacolod chicken inasal" loading="lazy" />
               <figcaption>
                 <b>Local Flavors</b>
               </figcaption>
             </figure>
             <figure>
-              <img src={asset('ruins.jpg')} alt="The Ruins heritage landmark" />
+              <img src={asset('ruins.jpg')} alt="The Ruins heritage landmark" loading="lazy" />
               <figcaption>
                 <b>The Ruins</b>
               </figcaption>
@@ -447,7 +505,7 @@ function Home() {
             {news.slice(0, 3).map((item, index) => (
               <article key={item.id}>
                 <div className="news-image">
-                  <img src={item.image || asset(`news${index + 1}.png`)} alt="" />
+                  <img src={item.image || asset(`news${index + 1}.png`)} alt="" loading="lazy" />
                   <span>{item.category}</span>
                 </div>
                 <div>
@@ -464,7 +522,7 @@ function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </DeferredSection>
     </div>
   )
 }
@@ -690,7 +748,21 @@ function PermitApplication() {
   )
 }
 
+const tourismSlides = [
+  { image: 'tourism1.png', label: 'Bacolod public plaza and lagoon' },
+  { image: 'tourism2.png', label: 'A peaceful coastal destination near Bacolod' },
+  { image: 'tourism3.png', label: 'The Ruins heritage landmark' },
+]
+
+const tourismSlideGroups = [
+  [tourismSlides[0], tourismSlides[1]],
+  [tourismSlides[2], tourismSlides[0]],
+  [tourismSlides[1], tourismSlides[2]],
+]
+
 function TourismPage() {
+  const [tourismSlide, setTourismSlide] = useState(0)
+  const [isCarouselPaused, setIsCarouselPaused] = useState(false)
   const destinations = [
     ['destination1.png', 'Mambukal Resort', 'Nature'],
     ['destination2.png', 'Campuestohan Highland Resort', 'Adventure'],
@@ -700,30 +772,108 @@ function TourismPage() {
     ['destination6.png', 'Negros Museum', 'Heritage'],
     ['destination7.jpg', 'The Ruins', 'Landmark'],
   ]
+
+  useEffect(() => {
+    if (isCarouselPaused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return undefined
+    }
+
+    const timer = window.setInterval(() => {
+      setTourismSlide((current) => (current + 1) % tourismSlideGroups.length)
+    }, 4500)
+
+    return () => window.clearInterval(timer)
+  }, [isCarouselPaused])
+
+  const moveTourismCarousel = (direction: number) => {
+    setTourismSlide(
+      (current) => (current + direction + tourismSlideGroups.length) % tourismSlideGroups.length,
+    )
+  }
+
   return (
     <div className="tourism-page">
       <section className="tourism-hero">
         <div>
+          <span className="tourism-kicker">✦ Welcome to the City of Smiles</span>
           <h1>
-            Empowering Bacolod
+            Celebrate Bacolod
             <br />
-            Through Digital Governance
+            in Every Color
           </h1>
           <p>
-            Explore culture, heritage, food, and unforgettable experiences in the City of Smiles.
+            Discover joyful festivals, timeless heritage, unforgettable food, and the warm
+            hospitality that makes every visit worth celebrating.
           </p>
-          <div>
-            <a className="button button-light" href="#destinations">
+          <div className="tourism-actions">
+            <a className="button" href="#destinations">
               Explore Destinations
             </a>
-            <a className="button" href="#dining">
-              Discover Bacolod
+            <a className="button button-light" href="#dining">
+              Taste Bacolod
             </a>
           </div>
-          <figure>
-            {['tourism1.png', 'tourism2.png', 'tourism3.png'].map((item) => (
-              <img src={asset(item)} key={item} />
-            ))}
+          <div className="tourism-highlights" aria-label="Bacolod tourism highlights">
+            <span>☀ Year-round adventures</span>
+            <span>✿ Festival culture</span>
+            <span>♡ Local hospitality</span>
+          </div>
+          <figure
+            className="tourism-carousel"
+            aria-label="Featured Bacolod destinations"
+            aria-roledescription="carousel"
+            onMouseEnter={() => setIsCarouselPaused(true)}
+            onMouseLeave={() => setIsCarouselPaused(false)}
+            onFocus={() => setIsCarouselPaused(true)}
+            onBlur={() => setIsCarouselPaused(false)}
+          >
+            <div
+              className="tourism-carousel-track"
+              style={{ transform: `translateX(-${tourismSlide * 100}%)` }}
+            >
+              {tourismSlideGroups.map((group, index) => (
+                <div
+                  className="tourism-carousel-slide"
+                  aria-hidden={tourismSlide !== index}
+                  key={`tourism-group-${index}`}
+                >
+                  {group.map((slide, imageIndex) => (
+                    <div className="tourism-carousel-image" key={`${slide.image}-${imageIndex}`}>
+                      <img src={asset(slide.image)} alt={slide.label} loading="lazy" />
+                      <figcaption>{slide.label}</figcaption>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+            <button
+              className="tourism-carousel-arrow previous"
+              type="button"
+              aria-label="Show previous destination"
+              onClick={() => moveTourismCarousel(-1)}
+            >
+              ‹
+            </button>
+            <button
+              className="tourism-carousel-arrow next"
+              type="button"
+              aria-label="Show next destination"
+              onClick={() => moveTourismCarousel(1)}
+            >
+              ›
+            </button>
+            <div className="tourism-carousel-dots" aria-label="Choose a destination slide">
+              {tourismSlideGroups.map((group, index) => (
+                <button
+                  className={tourismSlide === index ? 'active' : ''}
+                  type="button"
+                  aria-label={`Show destination group ${index + 1}: ${group.map((slide) => slide.label).join(' and ')}`}
+                  aria-current={tourismSlide === index ? 'true' : undefined}
+                  onClick={() => setTourismSlide(index)}
+                  key={`tourism-dot-${index}`}
+                />
+              ))}
+            </div>
           </figure>
         </div>
       </section>
@@ -740,7 +890,7 @@ function TourismPage() {
         <div className="destination-grid">
           {destinations.map(([image, title, type]) => (
             <article key={title}>
-              <img src={asset(image)} />
+              <img src={asset(image)} alt={title} loading="lazy" />
               <div>
                 <span>{type}</span>
                 <h3>{title}</h3>
@@ -758,7 +908,7 @@ function TourismPage() {
         <div className="restaurant-grid">
           {businesses.slice(0, 5).map(([name, type]) => (
             <article key={name}>
-              <img src={asset('dining.png')} />
+              <img src={asset('dining.png')} alt={`Dining at ${name}`} loading="lazy" />
               <div>
                 <span>★★★★★</span>
                 <h3>{name}</h3>
@@ -1191,44 +1341,80 @@ function JobsPage() {
     [query],
   )
   return (
-    <section className="content-page page-width">
-      <Title
-        eyebrow="Careers"
-        title="Job Opportunities"
-        description="Find meaningful work and serve the people of Bacolod."
-      />
-      <div className="listing-search">
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search job title or office"
-        />
-        <button className="button">Search Jobs</button>
-      </div>
-      <div className="filter-pills">
-        <button>All Jobs</button>
-        <button>Administrative</button>
-        <button>Engineering</button>
-        <button>Technology</button>
-        <button>Healthcare</button>
-      </div>
-      <div className="job-list">
-        {shown.map(([title, office, salary, type]) => (
-          <article key={title}>
-            <div className="job-icon">▣</div>
-            <div>
-              <span>{type}</span>
-              <h3>{title}</h3>
-              <p>{office}</p>
-              <small>⌖ Bacolod City · {salary}</small>
+    <div className="jobs-page">
+      <section className="jobs-hero">
+        <div className="page-width">
+          <span className="jobs-kicker">✦ Careers in the City of Smiles</span>
+          <h1>Build Your Future With Bacolod</h1>
+          <p>
+            Find meaningful opportunities, grow your career, and help deliver better public service
+            for every Bacolodnon.
+          </p>
+          <div className="jobs-highlights" aria-label="Job listing highlights">
+            <span>
+              <b>{jobs.length}</b> Open positions
+            </span>
+            <span>
+              <b>Local</b> Opportunities
+            </span>
+            <span>
+              <b>Public</b> Service careers
+            </span>
+          </div>
+          <div className="jobs-search">
+            <span aria-hidden="true">⌕</span>
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search by job title, office, or employment type"
+              aria-label="Search jobs"
+            />
+            <button className="button">Search Jobs</button>
+          </div>
+        </div>
+      </section>
+      <section className="jobs-content page-width">
+        <div className="jobs-heading">
+          <div>
+            <span className="eyebrow">Current vacancies</span>
+            <h2>Opportunities for every talent</h2>
+          </div>
+          <p>{shown.length} positions shown</p>
+        </div>
+        <div className="filter-pills jobs-filters">
+          <button>All Jobs</button>
+          <button>Administrative</button>
+          <button>Engineering</button>
+          <button>Technology</button>
+          <button>Healthcare</button>
+        </div>
+        <div className="job-list">
+          {shown.map(([title, office, salary, type], index) => (
+            <article key={title}>
+              <div className="job-icon" aria-hidden="true">
+                {['✦', '⚙', '⌘', '✚'][index % 4]}
+              </div>
+              <div className="job-details">
+                <span>{type}</span>
+                <h3>{title}</h3>
+                <p>{office}</p>
+                <small>⌖ Bacolod City · {salary}</small>
+              </div>
+              <Link className="button button-outline" to="/services">
+                Apply Now <b aria-hidden="true">→</b>
+              </Link>
+            </article>
+          ))}
+          {shown.length === 0 && (
+            <div className="jobs-empty">
+              <i aria-hidden="true">⌕</i>
+              <h3>No matching positions</h3>
+              <p>Try another title, office, or employment type.</p>
             </div>
-            <Link className="button button-outline" to="/services">
-              Apply Now
-            </Link>
-          </article>
-        ))}
-      </div>
-    </section>
+          )}
+        </div>
+      </section>
+    </div>
   )
 }
 
@@ -1237,51 +1423,88 @@ function BidsPage({ procurement = false }: { procurement?: boolean }) {
   const shown = bidItems.filter((item) =>
     item.join(' ').toLowerCase().includes(query.toLowerCase()),
   )
+  const visibleBids = shown.slice(0, procurement ? 2 : 4)
   return (
-    <section className="content-page page-width">
-      <div className="bid-layout">
-        <aside>
-          <h3>Bids & Procurement</h3>
-          <NavLink to="/bids">All Bids</NavLink>
-          <NavLink to="/procurement">Annual Procurement Plan</NavLink>
-          <a href="#awards">Notice of Awards</a>
-          <a href="#archive">Archive</a>
-        </aside>
-        <div>
-          <Title
-            title={procurement ? 'Annual Procurement Plan' : 'All Bids'}
-            description={
-              procurement
-                ? 'Download approved annual procurement plans.'
-                : 'Browse active procurement opportunities from Bacolod City.'
-            }
-          />
-          <div className="listing-search">
+    <div className="bids-page">
+      <section className="bids-hero">
+        <div className="page-width">
+          <span className="bids-kicker">✦ Open and transparent governance</span>
+          <h1>{procurement ? 'Annual Procurement Plans' : 'Bids & Opportunities'}</h1>
+          <p>
+            {procurement
+              ? 'Access approved procurement plans and public purchasing information from Bacolod City.'
+              : 'Explore active procurement opportunities and help build a brighter Bacolod through transparent public service.'}
+          </p>
+          <div className="bids-highlights" aria-label="Procurement highlights">
+            <span>
+              <b>{bidItems.length}</b> Active listings
+            </span>
+            <span>
+              <b>Open</b> Competition
+            </span>
+            <span>
+              <b>Clear</b> Requirements
+            </span>
+          </div>
+          <div className="bids-search">
+            <span aria-hidden="true">⌕</span>
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search bids"
+              placeholder="Search by project, reference number, or category"
+              aria-label="Search bids and procurement plans"
             />
-            <button className="button">Search</button>
-          </div>
-          <div className="bid-table">
-            {shown.slice(0, procurement ? 2 : 4).map(([title, ref, category, date]) => (
-              <article key={ref}>
-                <img src={asset('pdfImg.png')} />
-                <div>
-                  <span>{category}</span>
-                  <h3>{procurement ? `${title} — Annual Plan` : title}</h3>
-                  <p>
-                    {ref} · Closing {date}
-                  </p>
-                </div>
-                <button className="button button-outline">Download PDF</button>
-              </article>
-            ))}
+            <button className="button">Search Bids</button>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+      <section className="bids-content page-width">
+        <div className="bid-layout">
+          <aside>
+            <span className="eyebrow">Browse records</span>
+            <h3>Procurement Center</h3>
+            <NavLink to="/bids">All Bids</NavLink>
+            <NavLink to="/procurement">Annual Procurement Plan</NavLink>
+            <a href="#awards">Notice of Awards</a>
+            <a href="#archive">Archive</a>
+          </aside>
+          <div className="bids-results">
+            <div className="bids-heading">
+              <div>
+                <span className="eyebrow">Latest opportunities</span>
+                <h2>{procurement ? 'Annual Procurement Plan' : 'All Active Bids'}</h2>
+              </div>
+              <p>{visibleBids.length} records shown</p>
+            </div>
+            <div className="bid-table">
+              {visibleBids.map(([title, ref, category, date], index) => (
+                <article key={ref}>
+                  <div className="bid-number" aria-hidden="true">
+                    {String(index + 1).padStart(2, '0')}
+                  </div>
+                  <img src={asset('pdfImg.png')} alt="PDF document" />
+                  <div className="bid-details">
+                    <span>{category}</span>
+                    <h3>{procurement ? `${title} — Annual Plan` : title}</h3>
+                    <p>
+                      <b>{ref}</b> · Closing {date}
+                    </p>
+                  </div>
+                  <button className="button button-outline">Download PDF →</button>
+                </article>
+              ))}
+              {visibleBids.length === 0 && (
+                <div className="bids-empty">
+                  <i aria-hidden="true">⌕</i>
+                  <h3>No matching records</h3>
+                  <p>Try another project title, reference number, or category.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   )
 }
 
@@ -1392,36 +1615,45 @@ function CivicPage() {
     <div className="civic-page">
       <section className="civic-hero">
         <div>
-          <span>Citizen Participation</span>
+          <span className="civic-kicker">✦ Citizen Resources & Participation</span>
           <h1>
-            Your Voice Shapes
+            Everything You Need
             <br />
-            Bacolod’s Future
+            to Shape Bacolod
           </h1>
-          <p>Join consultations, answer surveys, and take part in building a better city.</p>
-          <div>
+          <p>
+            Find civic tools, share feedback, report community concerns, and take part in building a
+            brighter City of Smiles.
+          </p>
+          <div className="civic-actions">
             <button className="button" onClick={() => navigate('/services')}>
-              Take a Survey
+              Explore Resources
             </button>
             <a className="button button-light" href="#consultations">
               View Consultations
             </a>
           </div>
+          <div className="civic-highlights" aria-label="Citizen resource highlights">
+            <span>◉ Easy access</span>
+            <span>✦ Community-led</span>
+            <span>♡ Open participation</span>
+          </div>
         </div>
       </section>
-      <section id="consultations" className="content-page page-width">
+      <section id="consultations" className="resources-content page-width">
         <Title
-          eyebrow="Get Involved"
-          title="Civic Engagement Tools"
-          description="Simple ways to share your voice and participate in local government."
+          eyebrow="Citizen resource center"
+          title="Connect With Your City"
+          description="Use these simple tools to access information, share your voice, and participate in local government."
         />
         <div className="civic-grid">
           {[
             ['◫', 'Public Surveys', 'Give feedback on programs, services, and city priorities.'],
             ['◎', 'Consultations', 'Review proposals and join active public discussions.'],
             ['⚑', 'Report an Issue', 'Tell the city about concerns in your barangay.'],
-          ].map(([icon, title, copy]) => (
+          ].map(([icon, title, copy], index) => (
             <article key={title}>
+              <b className="civic-card-number">0{index + 1}</b>
               <i>{icon}</i>
               <span>Open</span>
               <h3>{title}</h3>
@@ -1443,7 +1675,7 @@ function CivicPage() {
             ['step3.png', 'Track city action'],
           ].map(([image, title], index) => (
             <article key={title}>
-              <img src={asset(image)} />
+              <img src={asset(image)} alt={title} loading="lazy" />
               <span>0{index + 1}</span>
               <h3>{title}</h3>
             </article>
