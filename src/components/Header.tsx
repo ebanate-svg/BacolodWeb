@@ -9,7 +9,7 @@ function Header() {
     <header className="site-header">
       <div className="nav-shell">
         <Link className="logo-link" to="/" aria-label="Bacolod City home">
-          <img src={asset('Transparent G-App Icon.png')} alt="Bacolod City" />
+          <img src={asset('G-AppLogo.png')} alt="Bacolod City" />
         </Link>
         <button
           className="menu-toggle"
