@@ -10,15 +10,8 @@ const tourismSlides = [
   { image: 'tourism3.png', label: 'The Ruins heritage landmark' },
 ]
 
-const tourismSlideGroups = [
-  [tourismSlides[0], tourismSlides[1]],
-  [tourismSlides[2], tourismSlides[0]],
-  [tourismSlides[1], tourismSlides[2]],
-]
-
 function TourismPage() {
   const [tourismSlide, setTourismSlide] = useState(0)
-  const [isCarouselPaused, setIsCarouselPaused] = useState(false)
   const destinations = [
     ['destination1.png', 'Mambukal Resort', 'Nature'],
     ['destination2.png', 'Campuestohan Highland Resort', 'Adventure'],
@@ -30,27 +23,31 @@ function TourismPage() {
   ]
 
   useEffect(() => {
-    if (isCarouselPaused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       return undefined
     }
 
     const timer = window.setInterval(() => {
-      setTourismSlide((current) => (current + 1) % tourismSlideGroups.length)
+      setTourismSlide((current) => (current + 1) % tourismSlides.length)
     }, 4500)
 
     return () => window.clearInterval(timer)
-  }, [isCarouselPaused])
-
-  const moveTourismCarousel = (direction: number) => {
-    setTourismSlide(
-      (current) => (current + direction + tourismSlideGroups.length) % tourismSlideGroups.length,
-    )
-  }
+  }, [])
 
   return (
     <div className="tourism-page">
       <section className="tourism-hero">
-        <div>
+        <div className="tourism-hero-background" aria-hidden="true">
+          {tourismSlides.map((slide, index) => (
+            <img
+              className={tourismSlide === index ? 'active' : ''}
+              src={asset(slide.image)}
+              alt=""
+              key={slide.image}
+            />
+          ))}
+        </div>
+        <div className="tourism-hero-content">
           <span className="tourism-kicker">✦ Welcome to the City of Smiles</span>
           <h1>
             Celebrate Bacolod
@@ -66,7 +63,7 @@ function TourismPage() {
               Explore Destinations
             </a>
             <a className="button button-light" href="#dining">
-              Taste Bacolod
+              Discover Local Flavors
             </a>
           </div>
           <div className="tourism-highlights" aria-label="Bacolod tourism highlights">
@@ -74,63 +71,6 @@ function TourismPage() {
             <span>✿ Festival culture</span>
             <span>♡ Local hospitality</span>
           </div>
-          <figure
-            className="tourism-carousel"
-            aria-label="Featured Bacolod destinations"
-            aria-roledescription="carousel"
-            onMouseEnter={() => setIsCarouselPaused(true)}
-            onMouseLeave={() => setIsCarouselPaused(false)}
-            onFocus={() => setIsCarouselPaused(true)}
-            onBlur={() => setIsCarouselPaused(false)}
-          >
-            <div
-              className="tourism-carousel-track"
-              style={{ transform: `translateX(-${tourismSlide * 100}%)` }}
-            >
-              {tourismSlideGroups.map((group, index) => (
-                <div
-                  className="tourism-carousel-slide"
-                  aria-hidden={tourismSlide !== index}
-                  key={`tourism-group-${index}`}
-                >
-                  {group.map((slide, imageIndex) => (
-                    <div className="tourism-carousel-image" key={`${slide.image}-${imageIndex}`}>
-                      <img src={asset(slide.image)} alt={slide.label} loading="lazy" />
-                      <figcaption>{slide.label}</figcaption>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-            <button
-              className="tourism-carousel-arrow previous"
-              type="button"
-              aria-label="Show previous destination"
-              onClick={() => moveTourismCarousel(-1)}
-            >
-              ‹
-            </button>
-            <button
-              className="tourism-carousel-arrow next"
-              type="button"
-              aria-label="Show next destination"
-              onClick={() => moveTourismCarousel(1)}
-            >
-              ›
-            </button>
-            <div className="tourism-carousel-dots" aria-label="Choose a destination slide">
-              {tourismSlideGroups.map((group, index) => (
-                <button
-                  className={tourismSlide === index ? 'active' : ''}
-                  type="button"
-                  aria-label={`Show destination group ${index + 1}: ${group.map((slide) => slide.label).join(' and ')}`}
-                  aria-current={tourismSlide === index ? 'true' : undefined}
-                  onClick={() => setTourismSlide(index)}
-                  key={`tourism-dot-${index}`}
-                />
-              ))}
-            </div>
-          </figure>
         </div>
       </section>
       <section id="destinations" className="tour-section page-width">

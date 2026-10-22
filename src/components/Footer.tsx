@@ -38,6 +38,7 @@ function Footer() {
           </div>
           <div>
             <h3>Legal</h3>
+            <Link to="/contact">Contact the City</Link>
             <a href="#terms">Terms and Conditions</a>
             <a href="#privacy">Privacy Policy</a>
           </div>

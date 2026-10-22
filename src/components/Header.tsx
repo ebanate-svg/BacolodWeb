@@ -9,7 +9,7 @@ function Header() {
     <header className="site-header">
       <div className="nav-shell">
         <Link className="logo-link" to="/" aria-label="Bacolod City home">
-          <img src={asset('bacolodLogo.png')} alt="Bacolod City" />
+          <img src={asset('Transparent G-App Icon.png')} alt="Bacolod City" />
         </Link>
         <button
           className="menu-toggle"
@@ -49,14 +49,13 @@ function Header() {
               <Link to="/services">Online Services</Link>
               <Link to="/waste">Waste Management</Link>
               <Link to="/local-business">Local Business</Link>
-              <Link to="/jobs">Job Listings</Link>
             </span>
           </span>
           <NavLink to="/tourism">Tourism</NavLink>
           <NavLink to="/jobs">Jobs</NavLink>
           <NavLink to="/bids">Bids</NavLink>
           <NavLink to="/civic">Resources</NavLink>
-          <a href="#contact">Contact</a>
+          <NavLink to="/contact">Contact</NavLink>
         </nav>
       </div>
     </header>

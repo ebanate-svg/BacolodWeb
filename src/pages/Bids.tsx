@@ -14,7 +14,7 @@ function BidsPage({ procurement = false }: { procurement?: boolean }) {
       <section className="bids-hero">
         <div className="page-width">
           <span className="bids-kicker">✦ Open and transparent governance</span>
-          <h1>{procurement ? 'Annual Procurement Plans' : 'Bids & Opportunities'}</h1>
+          <h1>Bids &amp; Opportunities</h1>
           <p>
             {procurement
               ? 'Access approved procurement plans and public purchasing information from Bacolod City.'
@@ -32,7 +32,7 @@ function BidsPage({ procurement = false }: { procurement?: boolean }) {
             </span>
           </div>
           <div className="bids-search">
-            <span aria-hidden="true">⌕</span>
+            <span className="bids-search-icon" aria-hidden="true" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}

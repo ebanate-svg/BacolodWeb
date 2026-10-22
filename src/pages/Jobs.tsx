@@ -30,7 +30,7 @@ function JobsPage() {
             </span>
           </div>
           <div className="jobs-search">
-            <span aria-hidden="true">⌕</span>
+            <span className="jobs-search-icon" aria-hidden="true" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -57,11 +57,8 @@ function JobsPage() {
           <button>Healthcare</button>
         </div>
         <div className="job-list">
-          {shown.map(([title, office, salary, type], index) => (
+          {shown.map(([title, office, salary, type]) => (
             <article key={title}>
-              <div className="job-icon" aria-hidden="true">
-                {['✦', '⚙', '⌘', '✚'][index % 4]}
-              </div>
               <div className="job-details">
                 <span>{type}</span>
                 <h3>{title}</h3>
@@ -69,7 +66,7 @@ function JobsPage() {
                 <small>⌖ Bacolod City · {salary}</small>
               </div>
               <Link className="button button-outline" to="/services">
-                Apply Now <b aria-hidden="true">→</b>
+                Apply Now
               </Link>
             </article>
           ))}

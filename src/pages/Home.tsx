@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import AppDownloadBadges from '../components/AppDownloadBadges'
+import { AppleIcon, GooglePlayIcon } from '../components/AppDownloadBadges'
+import BenefitIcon, { type BenefitIconName } from '../components/BenefitIcon'
 import DeferredSection from '../components/DeferredSection'
 import Title from '../components/Title'
 import { news as fallbackNews, type NewsItem } from '../data'
@@ -55,7 +56,6 @@ function Home() {
         </div>
         <img src={asset('slider2.png')} alt="Bacolod community" />
       </section>
-      <AppDownloadBadges />
       <DeferredSection className="portal-section page-width" minHeight={360}>
         <div>
           <h2>
@@ -108,7 +108,7 @@ function Home() {
             </span>
           </div>
           <div className="portal-access">
-            <Link to="/#">
+            <Link to="/services">
               <i aria-hidden="true">
                 <svg
                   width="16"
@@ -124,19 +124,32 @@ function Home() {
                 </svg>
               </i>
               <span>
-                <small>Access via</small>
-                <b>Web Portal</b>
+                <small>Open in your browser</small>
+                <b>Access the Web</b>
               </span>
             </Link>
-            <Link to="https://play.google.com/store/apps/details?id=co.fortistech.bacolodgapp">
-              <i className="play-icon" aria-hidden="true">
-                ▶
+            <a
+              href="https://play.google.com/store/apps/details?id=co.fortistech.bacolodgapp"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <i aria-hidden="true">
+                <GooglePlayIcon />
               </i>
               <span>
-                <small>Download the</small>
-                <b>Mobile App</b>
+                <small>Android app</small>
+                <b>Get it on Google Play</b>
               </span>
-            </Link>
+            </a>
+            <a href="#app-store">
+              <i className="apple-access-icon" aria-hidden="true">
+                <AppleIcon />
+              </i>
+              <span>
+                <small>iPhone and iPad</small>
+                <b>Get it on App Store</b>
+              </span>
+            </a>
           </div>
         </div>
       </DeferredSection>
@@ -147,14 +160,15 @@ function Home() {
         />
         <div className="benefit-grid page-width">
           {[
-            ['☝', 'Enhanced Convenience'],
-            ['⚡', 'Streamlined Processes'],
-            ['◉', 'Expanded Accessibility'],
-            ['♟', 'Real-Time Information'],
-          ].map(([icon, title], index) => (
+            ['convenience', 'Enhanced Convenience'],
+            ['process', 'Streamlined Processes'],
+            ['accessibility', 'Expanded Accessibility'],
+            ['updates', 'Real-Time Information'],
+          ].map(([icon, title]) => (
             <article key={title}>
-              <i>{icon}</i>
-              <small>0{index + 1}</small>
+              <i>
+                <BenefitIcon name={icon as BenefitIconName} />
+              </i>
               <h3>{title}</h3>
               <p>
                 Access city services with a user-friendly digital experience available whenever and

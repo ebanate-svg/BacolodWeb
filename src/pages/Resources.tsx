@@ -41,36 +41,38 @@ function CivicPage() {
         />
         <div className="civic-grid">
           {[
-            ['◫', 'Public Surveys', 'Give feedback on programs, services, and city priorities.'],
-            ['◎', 'Consultations', 'Review proposals and join active public discussions.'],
-            ['⚑', 'Report an Issue', 'Tell the city about concerns in your barangay.'],
-          ].map(([icon, title, copy], index) => (
+            [
+              'civic-survey.jpg',
+              'Public Surveys',
+              'Choose a topic',
+              'Give feedback on programs, services, and city priorities.',
+            ],
+            [
+              'civic-consultation.jpg',
+              'Consultations',
+              'Share your feedback',
+              'Review proposals and join active public discussions.',
+            ],
+            [
+              'civic-report-issue.jpg',
+              'Report an Issue',
+              'Track city action',
+              'Tell the city about concerns in your barangay.',
+            ],
+          ].map(([image, title, step, copy], index) => (
             <article key={title}>
-              <b className="civic-card-number">0{index + 1}</b>
-              <i>{icon}</i>
-              <span>Open</span>
-              <h3>{title}</h3>
-              <p>{copy}</p>
-              <Link className="button button-outline" to="/services">
-                Participate
-              </Link>
-            </article>
-          ))}
-        </div>
-        <Title
-          title="How to Participate"
-          description="Your contribution only takes a few minutes."
-        />
-        <div className="participate-grid">
-          {[
-            ['step1.jpg', 'Choose a topic'],
-            ['step2.jpg', 'Share your feedback'],
-            ['step3.png', 'Track city action'],
-          ].map(([image, title], index) => (
-            <article key={title}>
-              <img src={asset(image)} alt={title} loading="lazy" />
-              <span>0{index + 1}</span>
-              <h3>{title}</h3>
+              <div className="civic-card-image">
+                <img src={asset(image)} alt={step} loading="lazy" />
+                <b className="civic-card-number">0{index + 1}</b>
+              </div>
+              <div className="civic-card-content">
+                <span className="eyebrow">{step}</span>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+                <Link className="button button-outline" to="/services">
+                  Participate
+                </Link>
+              </div>
             </article>
           ))}
         </div>

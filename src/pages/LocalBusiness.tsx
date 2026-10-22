@@ -7,43 +7,133 @@ import { asset } from '../utils/assets'
 
 function BusinessPage() {
   const [query, setQuery] = useState('')
-  const shown = businesses.filter((item) =>
-    item.join(' ').toLowerCase().includes(query.toLowerCase()),
-  )
+  const [category, setCategory] = useState('All Categories')
+  const shown = businesses.filter(([name, type]) => {
+    const matchesQuery = `${name} ${type}`.toLowerCase().includes(query.trim().toLowerCase())
+    const matchesCategory =
+      category === 'All Categories' || type.toLowerCase().includes(category.toLowerCase())
+
+    return matchesQuery && matchesCategory
+  })
+
   return (
-    <section className="content-page page-width">
-      <Title
-        eyebrow="Support Local"
-        title="Discover Local Businesses"
-        description="Explore Bacolod restaurants, cafés, shops, and services."
-      />
-      <div className="listing-search">
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search restaurants, cafes…"
-        />
-        <select>
-          <option>All Categories</option>
-          <option>Restaurants</option>
-          <option>Cafés</option>
-        </select>
-        <button className="button">Search</button>
-      </div>
-      <div className="business-grid">
-        {shown.map(([name, type, image]) => (
-          <Link to="/local-business/21-restaurant" key={name}>
-            <img src={asset(image)} />
-            <div>
-              <span>★★★★★</span>
-              <h3>{name}</h3>
-              <p>{type}</p>
-              <small>⌖ Bacolod City</small>
-            </div>
+    <div className="local-business-page">
+      <section className="local-business-hero">
+        <div className="page-width">
+          <span className="local-business-kicker">✦ Support Bacolod Local</span>
+          <h1>Find Something Special in the City of Smiles</h1>
+          <p>
+            Discover homegrown restaurants, cafés, shops, and services that bring Bacolod’s warm
+            local character to life.
+          </p>
+          <div className="local-business-highlights" aria-label="Directory highlights">
+            <span>⌖ Bacolod businesses</span>
+            <span>★ Local favorites</span>
+            <span>♡ Support the community</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="local-business-directory page-width">
+        <div className="local-business-intro">
+          <Title
+            eyebrow="Local directory"
+            title="Discover Local Businesses"
+            description="Search local destinations and find a new Bacolod favorite."
+          />
+          <span className="business-result-count">
+            {shown.length} {shown.length === 1 ? 'place' : 'places'} found
+          </span>
+        </div>
+
+        <div className="listing-search local-business-search">
+          <span aria-hidden="true">⌕</span>
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search restaurants, cafés, and local favorites"
+            aria-label="Search local businesses"
+          />
+          <select
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+            aria-label="Filter by category"
+          >
+            <option>All Categories</option>
+            <option value="Filipino">Filipino Food</option>
+            <option value="Cafe">Cafés</option>
+            <option value="Seafood">Seafood</option>
+            <option value="Local">Local Favorites</option>
+          </select>
+          {(query || category !== 'All Categories') && (
+            <button
+              className="business-clear-filter"
+              type="button"
+              onClick={() => {
+                setQuery('')
+                setCategory('All Categories')
+              }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        {shown.length > 0 ? (
+          <div className="business-grid local-business-grid">
+            {shown.map(([name, type, image], index) => (
+              <Link to="/local-business/21-restaurant" key={name}>
+                <div className="business-card-image">
+                  <img src={asset(image)} alt={name} loading="lazy" />
+                  <span>{index < 2 ? 'Local favorite' : 'Explore'}</span>
+                </div>
+                <div>
+                  <div className="business-card-rating" aria-label="Rated five stars">
+                    ★★★★★
+                  </div>
+                  <h3>{name}</h3>
+                  <p>{type}</p>
+                  <div className="business-card-footer">
+                    <small>⌖ Bacolod City</small>
+                    <b aria-hidden="true">→</b>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="business-empty-state">
+            <span aria-hidden="true">⌕</span>
+            <h2>No businesses found</h2>
+            <p>Try another search term or clear the selected category.</p>
+            <button
+              className="button"
+              type="button"
+              onClick={() => {
+                setQuery('')
+                setCategory('All Categories')
+              }}
+            >
+              Show all businesses
+            </button>
+          </div>
+        )}
+
+        <div className="local-business-callout">
+          <span className="local-business-callout-icon" aria-hidden="true">
+            ♡
+          </span>
+          <div>
+            <span className="eyebrow">Grow local</span>
+            <h2>Every local purchase supports Bacolod</h2>
+            <p>Explore neighborhood businesses and help our city’s entrepreneurs thrive.</p>
+          </div>
+          <Link className="button button-outline" to="/services/bplo">
+            Business services
           </Link>
-        ))}
-      </div>
-    </section>
+        </div>
+      </section>
+    </div>
   )
 }
 
