@@ -1,3 +1,16 @@
+import {
+  ArrowRight,
+  Banknote,
+  Clock3,
+  FileText,
+  Heart,
+  Landmark,
+  MapPin,
+  Newspaper,
+  Quote,
+  Sparkles,
+  Star,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AppleIcon, GooglePlayIcon } from '../components/AppDownloadBadges'
@@ -26,12 +39,18 @@ function Home() {
     }
   }, [])
   return (
-    <div className="landing-page">
-      <section className="landing-hero">
-        <img src={asset('slider1.png')} alt="MassKara Festival dancers" />
-        <div>
-          <span className="hero-kicker">✦ Bacolod City Digital Services</span>
-          <h1>
+    <div className="landing-page min-h-screen font-sans text-brand-ink">
+      <section className="landing-hero relative grid overflow-hidden">
+        <img
+          className="h-full w-full object-cover"
+          src={asset('slider1.png')}
+          alt="MassKara Festival dancers"
+        />
+        <div className="relative z-10 text-center">
+          <span className="hero-kicker inline-flex items-center justify-center">
+            <Sparkles aria-hidden="true" /> Bacolod City Digital Services
+          </span>
+          <h1 className="font-heading font-extrabold tracking-[-0.055em]">
             Empowering Bacolod
             <br />
             Through Digital Governance
@@ -40,12 +59,21 @@ function Home() {
             Access essential city services and updates from your computer or mobile device—anytime,
             anywhere.
           </p>
-          <div className="hero-meta" aria-label="Portal highlights">
-            <span>◷ 24/7 Access</span>
-            <span>⌖ Bacolod City</span>
-            <span>♡ Citizen First</span>
+          <div
+            className="hero-meta flex flex-wrap items-center justify-center"
+            aria-label="Portal highlights"
+          >
+            <span>
+              <Clock3 aria-hidden="true" /> 24/7 Access
+            </span>
+            <span>
+              <MapPin aria-hidden="true" /> Bacolod City
+            </span>
+            <span>
+              <Heart aria-hidden="true" /> Citizen First
+            </span>
           </div>
-          <div className="hero-actions">
+          <div className="hero-actions flex flex-wrap items-center justify-center">
             <Link className="button" to="/services">
               Explore Services
             </Link>
@@ -54,9 +82,13 @@ function Home() {
             </Link>
           </div>
         </div>
-        <img src={asset('slider2.png')} alt="Bacolod community" />
+        <img
+          className="h-full w-full object-cover"
+          src={asset('slider2.png')}
+          alt="Bacolod community"
+        />
       </section>
-      <DeferredSection className="portal-section page-width" minHeight={360}>
+      <DeferredSection className="portal-section page-width grid items-center" minHeight={360}>
         <div>
           <h2>
             One City.
@@ -65,9 +97,12 @@ function Home() {
           </h2>
           <p>Transforming governance through digital innovation</p>
         </div>
-        <div className="portal-card">
-          <div className="portal-card__heading">
-            <div className="portal-icon" aria-hidden="true">
+        <div className="portal-card rounded-2xl bg-white">
+          <div className="portal-card__heading flex items-center">
+            <div
+              className="portal-icon flex shrink-0 items-center justify-center"
+              aria-hidden="true"
+            >
               <svg
                 width="22"
                 height="18"
@@ -95,16 +130,16 @@ function Home() {
           </p>
           <div className="chips" aria-label="Portal services">
             <span>
-              <i aria-hidden="true">↪</i> Permit Applications
+              <FileText aria-hidden="false" /> Permit Applications
             </span>
             <span>
-              <i aria-hidden="true">▰</i> Online Payments
+              <Banknote aria-hidden="true" /> Online Payments
             </span>
             <span>
-              <i aria-hidden="true">▤</i> City News
+              <Newspaper aria-hidden="true" /> City News
             </span>
             <span>
-              <i aria-hidden="true">◉</i> Tourism Updates
+              <MapPin aria-hidden="true" /> Tourism Updates
             </span>
           </div>
           <div className="portal-access">
@@ -184,7 +219,7 @@ function Home() {
         </div>
         <div className="mayor-copy">
           <span className="eyebrow">
-            <i aria-hidden="true">★</i> City Leadership
+            <Star aria-hidden="true" /> City Leadership
           </span>
           <h2>Leadership that Drives Innovation</h2>
           <h4>Hon. Greg Gasataya · City Mayor</h4>
@@ -199,7 +234,9 @@ function Home() {
             public services faster, more accessible, and more transparent.
           </p>
           <blockquote>
-            <i aria-hidden="true">”</i>
+            <i aria-hidden="true">
+              <Quote />
+            </i>
             <em>
               “This initiative is not just about technology—it’s about empowering every Bacolodnon
               to connect, participate, and prosper in our growing digital community.”
@@ -227,7 +264,7 @@ function Home() {
         <div className="discover-card page-width">
           <div className="discover-copy">
             <span className="eyebrow">
-              <i aria-hidden="true">●</i> Explore Bacolod
+              <Landmark aria-hidden="true" /> Explore Bacolod
             </span>
             <h2>
               Discover Bacolod —<br />
@@ -244,7 +281,7 @@ function Home() {
               perfect blend of hospitality and innovation.
             </p>
             <Link className="button" to="/tourism">
-              Explore More <span aria-hidden="true">›</span>
+              Explore More <ArrowRight aria-hidden="true" />
             </Link>
           </div>
           <div className="discover-images">
@@ -295,7 +332,7 @@ function Home() {
                   <p>{item.copy}</p>
                   {item.url ? (
                     <a href={item.url} target="_blank" rel="noreferrer">
-                      Read →
+                      Read <ArrowRight aria-hidden="true" />
                     </a>
                   ) : null}
                 </div>

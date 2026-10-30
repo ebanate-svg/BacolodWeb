@@ -12,17 +12,17 @@ function Header() {
     location.pathname.startsWith('/local-business')
 
   return (
-    <header className="site-header">
-      <div className="nav-shell">
-        <Link className="logo-link" to="/" aria-label="Bacolod City home">
-          <img src={asset('G-AppLogo.png')} alt="Bacolod City" />
-          <span>
-            <b>Bacolod eGov</b>
-            <small>City of Smiles</small>
+    <header className="site-header sticky top-0 z-50 w-full bg-white font-sans">
+      <div className="nav-shell page-width flex items-center justify-between">
+        <Link className="logo-link flex items-center" to="/" aria-label="Bacolod City home">
+          <img className="block object-contain" src={asset('G-AppLogo.png')} alt="Bacolod City" />
+          <span className="flex flex-col">
+            <b className="font-heading">Bacolod eGov</b>
+            <small className="text-brand-muted">City of Smiles</small>
           </span>
         </Link>
         <button
-          className="menu-toggle"
+          className="menu-toggle items-center justify-center"
           aria-expanded={open}
           aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
           onClick={() => setOpen((value) => !value)}
@@ -32,7 +32,7 @@ function Header() {
           <span />
         </button>
         <nav
-          className={open ? 'is-open' : ''}
+          className={`${open ? 'is-open' : ''} items-center`}
           onClick={() => {
             setOpen(false)
             setServicesOpen(false)
@@ -40,7 +40,7 @@ function Header() {
         >
           <NavLink to="/">Home</NavLink>
           <span
-            className="nav-dropdown"
+            className="nav-dropdown relative"
             onMouseEnter={() => setServicesOpen(true)}
             onMouseLeave={() => setServicesOpen(false)}
             onFocus={() => setServicesOpen(true)}
@@ -57,12 +57,14 @@ function Header() {
                 setServicesOpen((value) => !value)
               }}
             >
-              Services <span className="dropdown-chevron" aria-hidden="true" />
+              Services <span className="dropdown-chevron inline-block" aria-hidden="true" />
             </button>
-            <span className={servicesOpen ? 'dropdown is-open' : 'dropdown'}>
+            <span
+              className={`${servicesOpen ? 'dropdown is-open' : 'dropdown'} absolute flex flex-col`}
+            >
               <Link to="/services">Online Services</Link>
               <Link to="/services/bplo">Business Permits</Link>
-              <Link to="/waste">Waste Management</Link>
+              {/* <Link to="/waste">Waste Management</Link> */}
               <Link to="/local-business">Local Business</Link>
             </span>
           </span>

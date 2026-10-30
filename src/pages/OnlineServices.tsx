@@ -1,24 +1,60 @@
+import {
+  Accessibility,
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  Check,
+  ClipboardCheck,
+  ClipboardList,
+  Clock3,
+  FileBadge,
+  HelpCircle,
+  Info,
+  MapPin,
+  MapPinned,
+  MonitorCog,
+  Plus,
+  RefreshCcw,
+  ScanSearch,
+  ShieldCheck,
+  Sparkles,
+  XCircle,
+} from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import Title from '../components/Title'
 import { services } from '../data'
-import { asset } from '../utils/assets'
+
+const serviceIcons = {
+  business: Building2,
+  technology: MonitorCog,
+  tracker: ScanSearch,
+  senior: Accessibility,
+}
 
 function ServicesPage() {
   return (
-    <div className="services-page">
-      <section className="services-hero">
+    <div className="services-page min-h-screen bg-orange-50/30 font-sans text-brand-ink">
+      <section className="services-hero text-center">
         <div className="page-width">
-          <span className="services-kicker">✦ Bacolod City Online Services</span>
+          <span className="services-kicker inline-flex items-center justify-center">
+            <Sparkles aria-hidden="true" /> Bacolod City Online Services
+          </span>
           <h1>City Services, One Easy Platform</h1>
           <p>
             Apply, request, and access essential government services from wherever you are—securely
             and conveniently.
           </p>
           <div className="services-highlights" aria-label="Online service highlights">
-            <span>◷ Available 24/7</span>
-            <span>✓ Secure transactions</span>
-            <span>⌖ Built for Bacolodnons</span>
+            <span>
+              <Clock3 aria-hidden="true" /> Available 24/7
+            </span>
+            <span>
+              <ShieldCheck aria-hidden="true" /> Secure transactions
+            </span>
+            <span>
+              <MapPin aria-hidden="true" /> Built for Bacolodnons
+            </span>
           </div>
         </div>
       </section>
@@ -28,22 +64,38 @@ function ServicesPage() {
           title="What can we help you with?"
           description="Choose a department to begin your request or application."
         />
-        <div className="service-grid">
-          {services.map((service) => (
-            <Link to={service.href} key={service.id}>
-              <div className="service-card-topline">
-                <i>{service.icon}</i>
-                <small>Available online</small>
-              </div>
-              <h3>{service.title}</h3>
-              <p>{service.description}</p>
-              <span>
-                Open service <b aria-hidden="true">→</b>
-              </span>
-            </Link>
-          ))}
+        <div className="service-grid grid">
+          {services.map((service) => {
+            const ServiceIcon = serviceIcons[service.icon]
+            const content = (
+              <>
+                <div className="service-card-topline">
+                  <i aria-hidden="true">
+                    <ServiceIcon />
+                  </i>
+                  <small>{service.external ? 'Available in G-App' : 'Available online'}</small>
+                </div>
+                <h3>{service.title}</h3>
+                <p>{service.description}</p>
+                <span>
+                  {service.external ? 'Open in G-App' : 'Open service'}{' '}
+                  <ArrowRight aria-hidden="true" />
+                </span>
+              </>
+            )
+
+            return service.external ? (
+              <a href={service.href} key={service.id} target="_blank" rel="noreferrer">
+                {content}
+              </a>
+            ) : (
+              <Link to={service.href} key={service.id}>
+                {content}
+              </Link>
+            )
+          })}
         </div>
-        <div className="services-help">
+        <div className="services-help flex items-center justify-between">
           <div>
             <span className="eyebrow">Need assistance?</span>
             <h3>Not sure which service to choose?</h3>
@@ -63,61 +115,78 @@ const bploOptions = [
     'New Business Permit',
     'Register and apply for a new business permit.',
     '/services/bplo/requirements',
-    '＋',
+    'new',
     'Start a business',
   ],
   [
     'Renew Business Permit',
     'Renew your existing permit online.',
     '/services/bplo/apply',
-    '↻',
+    'renew',
     'Keep records current',
   ],
   [
     'Retire Business',
     'Submit a request to retire a business.',
     '/services/bplo/apply',
-    '×',
+    'retire',
     'Close a registration',
   ],
   [
     'Request Certification',
     'Request a certified business record.',
     '/services/bplo/apply',
-    '▤',
+    'certificate',
     'Get official records',
   ],
   [
     'Track Application',
     'Check your application status.',
     '/services/bplo/apply',
-    '◎',
+    'track',
     'Follow your progress',
   ],
   [
     'Business Locator',
     'Verify businesses registered in Bacolod.',
     '/local-business',
-    '⌖',
+    'locator',
     'Explore local business',
   ],
 ]
 
+const bploIcons = {
+  new: Plus,
+  renew: RefreshCcw,
+  retire: XCircle,
+  certificate: FileBadge,
+  track: ScanSearch,
+  locator: MapPinned,
+}
+
 function BploPage() {
   return (
-    <div className="bplo-page">
-      <section className="bplo-hero">
+    <div className="bplo-page min-h-screen bg-orange-50/30 font-sans text-brand-ink">
+      <section className="bplo-hero text-center">
         <div className="page-width">
-          <span className="bplo-kicker">✦ Business Permits &amp; Licensing Office</span>
+          <span className="bplo-kicker">
+            <Sparkles aria-hidden="true" /> Business Permits &amp; Licensing Office
+          </span>
           <h1>Build Your Business in Bacolod</h1>
           <p>
             Apply, renew, and manage your business permits through one convenient city service
             center.
           </p>
           <div className="bplo-highlights" aria-label="BPLO service highlights">
-            <span>✓ Guided applications</span>
-            <span>◷ Online convenience</span>
-            <span>⌖ Local business support</span>
+            <span>
+              <ClipboardCheck aria-hidden="true" /> Guided applications
+            </span>
+            <span>
+              <Clock3 aria-hidden="true" /> Online convenience
+            </span>
+            <span>
+              <MapPin aria-hidden="true" /> Local business support
+            </span>
           </div>
         </div>
       </section>
@@ -128,25 +197,30 @@ function BploPage() {
           title="What would you like to do today?"
           description="Select an option to begin your permit or licensing request."
         />
-        <div className="bplo-grid">
-          {bploOptions.map(([title, copy, href, icon, label]) => (
-            <Link key={title} to={href}>
-              <div className="bplo-card-topline">
-                <i aria-hidden="true">{icon}</i>
-                <small>{label}</small>
-              </div>
-              <h3>{title}</h3>
-              <p>{copy}</p>
-              <span>
-                Continue <b aria-hidden="true">→</b>
-              </span>
-            </Link>
-          ))}
+        <div className="bplo-grid grid">
+          {bploOptions.map(([title, copy, href, icon, label]) => {
+            const BploIcon = bploIcons[icon as keyof typeof bploIcons]
+            return (
+              <Link key={title} to={href}>
+                <div className="bplo-card-topline">
+                  <i aria-hidden="true">
+                    <BploIcon />
+                  </i>
+                  <small>{label}</small>
+                </div>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+                <span>
+                  Continue <ArrowRight aria-hidden="true" />
+                </span>
+              </Link>
+            )
+          })}
         </div>
 
         <div className="bplo-assistance">
           <span className="bplo-assistance-icon" aria-hidden="true">
-            ?
+            <HelpCircle />
           </span>
           <div>
             <span className="eyebrow">BPLO assistance</span>
@@ -167,13 +241,15 @@ function RequirementsPage() {
   const readyCount = checked.filter(Boolean).length
 
   return (
-    <div className="requirements-page">
-      <section className="requirements-hero">
+    <div className="requirements-page min-h-screen bg-orange-50/30 font-sans text-brand-ink">
+      <section className="requirements-hero text-center">
         <div className="page-width">
           <Link className="back-link" to="/services/bplo">
-            ← Back to BPLO Services
+            <ArrowLeft aria-hidden="true" /> Back to BPLO Services
           </Link>
-          <span className="requirements-kicker">✦ New Business Permit</span>
+          <span className="requirements-kicker">
+            <Sparkles aria-hidden="true" /> New Business Permit
+          </span>
           <h1>Prepare Your Application</h1>
           <p>Review the documents you need, mark each one ready, then begin your application.</p>
           <div className="requirements-highlights" aria-label="Application information">
@@ -185,7 +261,7 @@ function RequirementsPage() {
       </section>
 
       <section className="requirements-content page-width">
-        <div className="requirements-layout">
+        <div className="requirements-layout grid items-start">
           <div className="requirements-card">
             <div className="requirements-card-heading">
               <div>
@@ -201,7 +277,7 @@ function RequirementsPage() {
             ].map((item, index) => (
               <label className={checked[index] ? 'is-ready' : ''} key={item}>
                 <span className="requirement-number" aria-hidden="true">
-                  {checked[index] ? '✓' : `0${index + 1}`}
+                  {checked[index] ? <Check /> : `0${index + 1}`}
                 </span>
                 <span>
                   <b>{item}</b>
@@ -228,13 +304,13 @@ function RequirementsPage() {
 
           <aside>
             <span className="requirements-aside-icon" aria-hidden="true">
-              ▤
+              <ClipboardList />
             </span>
             <span className="eyebrow">Next step</span>
             <h2>Apply for a New Business Permit</h2>
             <p>Once your documents are ready, begin the secure online application.</p>
             <Link className="button" to="/services/bplo/apply">
-              Start application →
+              Start application <ArrowRight aria-hidden="true" />
             </Link>
             <div className="requirements-help">
               <b>Need help?</b>
@@ -245,7 +321,9 @@ function RequirementsPage() {
         </div>
 
         <div className="requirements-note">
-          <span aria-hidden="true">i</span>
+          <span aria-hidden="true">
+            <Info />
+          </span>
           <p>
             Check that every document is clear and complete before uploading it. This helps the city
             review your application faster.
@@ -266,11 +344,13 @@ function PermitApplication() {
   }
   if (sent)
     return (
-      <div className="permit-page permit-success-page">
+      <div className="permit-page permit-success-page min-h-screen bg-orange-50/30 font-sans text-brand-ink">
         <section className="permit-success-wrap page-width">
           <div className="success-panel">
             <span className="permit-success-kicker">Application submitted</span>
-            <i>✓</i>
+            <i aria-hidden="true">
+              <Check />
+            </i>
             <h1>Application received</h1>
             <p>Your new business permit application has been securely sent to the BPLO.</p>
             <div className="permit-reference">
@@ -297,13 +377,15 @@ function PermitApplication() {
   ]
 
   return (
-    <div className="permit-page">
-      <section className="permit-hero">
+    <div className="permit-page min-h-screen bg-orange-50/30 font-sans text-brand-ink">
+      <section className="permit-hero text-center">
         <div className="page-width">
           <Link className="back-link" to="/services/bplo/requirements">
-            ← Back to requirements
+            <ArrowLeft aria-hidden="true" /> Back to requirements
           </Link>
-          <span className="permit-kicker">✦ New Business Permit</span>
+          <span className="permit-kicker">
+            <Sparkles aria-hidden="true" /> New Business Permit
+          </span>
           <h1>Apply Online with Ease</h1>
           <p>Complete three short steps to submit your business permit application securely.</p>
         </div>
@@ -317,13 +399,13 @@ function PermitApplication() {
               aria-current={step === index + 1 ? 'step' : undefined}
               key={label}
             >
-              <i>{step > index + 1 ? '✓' : index + 1}</i>
+              <i>{step > index + 1 ? <Check /> : index + 1}</i>
               <b>{label}</b>
             </span>
           ))}
         </div>
 
-        <div className="permit-layout">
+        <div className="permit-layout grid items-start">
           <form className="form-card permit-form" onSubmit={handleSubmit}>
             <div className="permit-form-heading">
               <span className="eyebrow">Step {step} of 3</span>
@@ -375,7 +457,7 @@ function PermitApplication() {
             {step === 3 && (
               <div className="review-box">
                 <span className="review-icon" aria-hidden="true">
-                  ✓
+                  <Check />
                 </span>
                 <h3>Ready for submission</h3>
                 <p>
@@ -395,24 +477,32 @@ function PermitApplication() {
                   className="button button-muted"
                   onClick={() => setStep(step - 1)}
                 >
-                  ← Back
+                  <ArrowLeft aria-hidden="true" /> Back
                 </button>
               )}
-              <button className="button">{step === 3 ? 'Submit application' : 'Continue'} →</button>
+              <button className="button">
+                {step === 3 ? 'Submit application' : 'Continue'} <ArrowRight aria-hidden="true" />
+              </button>
             </div>
           </form>
 
           <aside className="permit-aside">
             <span className="permit-aside-icon" aria-hidden="true">
-              ◷
+              <ShieldCheck />
             </span>
             <span className="eyebrow">Save time online</span>
             <h2>Your application is secure</h2>
             <p>Review your entries before continuing. Required fields are checked at every step.</p>
             <ul>
-              <li>Secure city submission</li>
-              <li>Guided three-step process</li>
-              <li>Reference number after submission</li>
+              {[
+                'Secure city submission',
+                'Guided three-step process',
+                'Reference number after submission',
+              ].map((item) => (
+                <li key={item}>
+                  <Check aria-hidden="true" /> {item}
+                </li>
+              ))}
             </ul>
             <div className="permit-help">
               <b>Need assistance?</b>
@@ -422,7 +512,9 @@ function PermitApplication() {
         </div>
 
         <div className="permit-privacy">
-          <span aria-hidden="true">◆</span>
+          <span aria-hidden="true">
+            <ShieldCheck />
+          </span>
           <p>Your information is used only to process your Bacolod City permit application.</p>
         </div>
       </section>

@@ -1,3 +1,4 @@
+import { Check, X } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { firebaseReady, submitRequest } from '../firebase'
 
@@ -23,18 +24,24 @@ function RequestModal({ type, onClose }: { type: string; onClose: () => void }) 
   }
   return (
     <div
-      className="modal"
+      className="modal fixed inset-0 z-[100] flex items-center justify-center"
       role="dialog"
       aria-modal="true"
       onMouseDown={(event) => event.currentTarget === event.target && onClose()}
     >
-      <div className="modal-card">
-        <button className="modal-close" onClick={onClose}>
-          ×
+      <div className="modal-card relative w-[min(92vw,560px)]">
+        <button
+          className="modal-close absolute inline-flex items-center justify-center"
+          onClick={onClose}
+          aria-label="Close request form"
+        >
+          <X aria-hidden="true" />
         </button>
         {status === 'done' ? (
-          <div className="success-panel compact">
-            <i>✓</i>
+          <div className="success-panel compact text-center">
+            <i aria-hidden="true">
+              <Check />
+            </i>
             <h2>Request received</h2>
             <p>
               Reference: <b>{reference}</b>
@@ -50,7 +57,7 @@ function RequestModal({ type, onClose }: { type: string; onClose: () => void }) 
           <>
             <span className="eyebrow">{type}</span>
             <h2>Send your request</h2>
-            <form onSubmit={handleSubmit}>
+            <form className="flex flex-col" onSubmit={handleSubmit}>
               <label>
                 Full name
                 <input name="name" required />
