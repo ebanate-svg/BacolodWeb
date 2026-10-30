@@ -1,3 +1,4 @@
+import { Check, Clock3, Mail, MapPin, Phone, Sparkles } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 
 function ContactPage() {
@@ -9,16 +10,24 @@ function ContactPage() {
   }
 
   return (
-    <div className="contact-page">
-      <section className="contact-hero">
+    <div className="contact-page min-h-screen bg-orange-50/30 font-sans text-brand-ink">
+      <section className="contact-hero text-center">
         <div className="page-width">
-          <span className="contact-kicker">✦ Connect with the City of Smiles</span>
+          <span className="contact-kicker inline-flex items-center justify-center">
+            <Sparkles aria-hidden="true" /> Connect with the City of Smiles
+          </span>
           <h1>How Can We Help?</h1>
           <p>Send a question, request assistance, or connect with the right Bacolod City office.</p>
           <div className="contact-highlights" aria-label="Contact service highlights">
-            <span>◷ Monday–Friday</span>
-            <span>☎ City assistance</span>
-            <span>⌖ Bacolod City Hall</span>
+            <span>
+              <Clock3 aria-hidden="true" /> Monday–Friday
+            </span>
+            <span>
+              <Phone aria-hidden="true" /> City assistance
+            </span>
+            <span>
+              <MapPin aria-hidden="true" /> Bacolod City Hall
+            </span>
           </div>
         </div>
       </section>
@@ -35,10 +44,12 @@ function ContactPage() {
           </a>
         </div>
 
-        <div className="contact-layout">
+        <div className="contact-layout grid items-start">
           <aside className="contact-information">
             <div className="contact-location-visual">
-              <span>⌖</span>
+              <span aria-hidden="true">
+                <MapPin />
+              </span>
               <div>
                 <small>Visit city hall</small>
                 <strong>Bacolod City Government Center</strong>
@@ -46,28 +57,36 @@ function ContactPage() {
             </div>
             <div className="contact-details">
               <div>
-                <i aria-hidden="true">⌖</i>
+                <i aria-hidden="true">
+                  <MapPin />
+                </i>
                 <span>
                   <b>Office address</b>
                   <p>Brgy. Villamonte, Bacolod City, Negros Occidental</p>
                 </span>
               </div>
               <div>
-                <i aria-hidden="true">☎</i>
+                <i aria-hidden="true">
+                  <Phone />
+                </i>
                 <span>
                   <b>Telephone</b>
                   <a href="tel:+63344349122">(034) 434-9122</a>
                 </span>
               </div>
               <div>
-                <i aria-hidden="true">✉</i>
+                <i aria-hidden="true">
+                  <Mail />
+                </i>
                 <span>
                   <b>Email</b>
                   <a href="mailto:info@bacolodcity.gov.ph">info@bacolodcity.gov.ph</a>
                 </span>
               </div>
               <div>
-                <i aria-hidden="true">◷</i>
+                <i aria-hidden="true">
+                  <Clock3 />
+                </i>
                 <span>
                   <b>Office hours</b>
                   <p>Monday–Friday, 8:00 AM–5:00 PM</p>
@@ -80,10 +99,12 @@ function ContactPage() {
             </div>
           </aside>
 
-          <div className="contact-form-panel">
+          <div className="contact-form-panel rounded-2xl bg-white">
             {sent ? (
               <div className="contact-success" role="status">
-                <i aria-hidden="true">✓</i>
+                <i aria-hidden="true">
+                  <Check />
+                </i>
                 <span className="eyebrow">Message received</span>
                 <h2>Thank you for contacting us</h2>
                 <p>Your message has been recorded. A city representative will follow up soon.</p>

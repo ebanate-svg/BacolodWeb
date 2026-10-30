@@ -33,7 +33,14 @@ const paths: Record<BenefitIconName, ReactNode> = {
 
 export default function BenefitIcon({ name }: { name: BenefitIconName }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+    <svg
+      className="block size-6 text-brand-orange"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      aria-hidden="true"
+    >
       {paths[name]}
     </svg>
   )

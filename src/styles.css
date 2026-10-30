@@ -1,3 +1,87 @@
+/*
+ * Tailwind foundation. Preflight is intentionally omitted during the compatibility
+ * migration so the existing portal retains its exact browser defaults and layout.
+ */
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@theme {
+  --font-sans: 'Inter', 'Noto Sans', Arial, Helvetica, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', 'Inter', 'Noto Sans', Arial, Helvetica, sans-serif;
+  --color-brand-orange: #ed8612;
+  --color-brand-orange-dark: #c96f08;
+  --color-brand-ink: #17172f;
+  --color-brand-muted: #687083;
+  --color-brand-line: #e8e8eb;
+  --color-brand-soft: #f6f6f6;
+  --shadow-brand: 0 5px 14px rgb(237 134 18 / 15%);
+}
+
+@utility page-width {
+  width: min(1120px, calc(100% - 48px));
+  margin-inline: auto;
+}
+
+@utility button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid var(--color-brand-orange);
+  border-radius: 6px;
+  padding: 12px 22px;
+  background: var(--color-brand-orange);
+  color: #fff;
+  box-shadow: var(--shadow-brand);
+  font-size: 12px;
+  font-weight: 700;
+  transition: 0.2s;
+
+  &:hover:not(:disabled) {
+    background: var(--color-brand-orange-dark);
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+@utility button-sm {
+  padding: 9px 25px;
+}
+
+@utility button-light {
+  border-color: #fff;
+  background: #fff;
+  color: var(--color-brand-ink);
+  box-shadow: none;
+}
+
+@utility button-outline {
+  background: #fff;
+  color: var(--color-brand-orange-dark);
+  box-shadow: none;
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-brand-orange);
+    background: var(--color-brand-orange);
+    color: #fff;
+  }
+
+  & svg {
+    color: currentColor;
+    stroke: currentColor;
+  }
+}
+
+@utility button-muted {
+  border-color: #eef0f3;
+  background: #eef0f3;
+  color: #495267;
+  box-shadow: none;
+}
+
 :root {
   font-family: 'Inter', 'Noto Sans', Arial, Helvetica, sans-serif;
   color: #182033;
@@ -40,16 +124,16 @@ select,
 textarea {
   font: inherit;
 }
+input::placeholder,
+textarea::placeholder {
+  font-size: 0.75em;
+}
 button {
   cursor: pointer;
 }
 img {
   display: block;
   max-width: 100%;
-}
-.page-width {
-  width: min(1120px, calc(100% - 48px));
-  margin-inline: auto;
 }
 .site-header {
   height: 88px;
@@ -125,44 +209,6 @@ img {
   border: 0;
   background: transparent;
   font-size: 24px;
-}
-.button {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  border: 1px solid var(--orange);
-  background: var(--orange);
-  color: #fff;
-  border-radius: 6px;
-  padding: 12px 22px;
-  font-weight: 700;
-  font-size: 12px;
-  transition: 0.2s;
-  box-shadow: 0 5px 14px #ed861225;
-}
-.button:hover {
-  background: var(--orange-dark);
-  transform: translateY(-1px);
-}
-.button-sm {
-  padding: 9px 25px;
-}
-.button-light {
-  background: #fff;
-  color: var(--ink);
-  border-color: #fff;
-  box-shadow: none;
-}
-.button-outline {
-  background: #fff;
-  color: var(--orange-dark);
-  box-shadow: none;
-}
-.button-muted {
-  background: #eef0f3;
-  color: #495267;
-  border-color: #eef0f3;
-  box-shadow: none;
 }
 .landing-hero {
   max-width: 1440px;
@@ -584,6 +630,26 @@ footer {
 }
 .footer-bottom small {
   color: var(--muted);
+}
+
+.footer-socials {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-socials a {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+
+.footer-socials svg {
+  width: 15px;
+  height: 15px;
 }
 .content-page {
   padding: 70px 0 100px;
@@ -3230,21 +3296,22 @@ footer {
 }
 
 .permit-aside li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: #4f5d73;
   font-size: 11px;
 }
 
-.permit-aside li::before {
-  content: '✓';
-  display: inline-grid;
-  place-items: center;
+.permit-aside li svg {
   width: 20px;
   height: 20px;
-  margin-right: 8px;
+  padding: 4px;
   border-radius: 7px;
   background: #eaf6ed;
   color: #268349;
-  font-weight: 800;
+  stroke-width: 3;
+  flex: 0 0 auto;
 }
 
 .permit-help {
@@ -3702,9 +3769,97 @@ footer {
 }
 
 .business-card-rating {
+  display: flex;
+  gap: 2px;
   color: #ef8a1d;
   font-size: 10px;
   letter-spacing: 0.08em;
+}
+
+.business-card-rating svg,
+.rating-stars svg {
+  width: 12px;
+  height: 12px;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 2px;
+  color: #ef8a1d;
+}
+
+.button svg,
+.back-link svg,
+.hero-kicker svg,
+.tourism-kicker svg,
+.jobs-kicker svg,
+.bids-kicker svg,
+.civic-kicker svg,
+.contact-kicker svg,
+.local-business-kicker svg,
+.services-kicker svg,
+.bplo-kicker svg,
+.requirements-kicker svg,
+.permit-kicker svg,
+.waste-kicker svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+.button,
+.back-link,
+.hero-kicker,
+.tourism-kicker,
+.jobs-kicker,
+.bids-kicker,
+.civic-kicker,
+.contact-kicker,
+.local-business-kicker,
+.services-kicker,
+.bplo-kicker,
+.requirements-kicker,
+.permit-kicker,
+.waste-kicker,
+.hero-meta span,
+.tourism-highlights span,
+.civic-highlights span,
+.contact-highlights span,
+.local-business-highlights span,
+.services-highlights span,
+.bplo-highlights span,
+.waste-highlights span {
+  align-items: center;
+  gap: 6px;
+}
+
+.button,
+.back-link,
+.hero-meta span,
+.tourism-highlights span,
+.civic-highlights span,
+.contact-highlights span,
+.local-business-highlights span,
+.services-highlights span,
+.bplo-highlights span,
+.waste-highlights span {
+  display: inline-flex;
+}
+
+.hero-meta svg,
+.tourism-highlights svg,
+.civic-highlights svg,
+.contact-highlights svg,
+.local-business-highlights svg,
+.services-highlights svg,
+.bplo-highlights svg,
+.waste-highlights svg,
+.portal-card .chips svg,
+.business-card-footer svg,
+.job-details small svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
 }
 
 .local-business-grid h3 {
@@ -4385,34 +4540,11 @@ footer {
 }
 
 .bids-search-icon {
-  position: relative;
   width: 24px;
   height: 24px;
   margin-right: 2px;
-}
-
-.bids-search-icon::before {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 12px;
-  height: 12px;
-  border: 2px solid #d66a0e;
-  border-radius: 50%;
-}
-
-.bids-search-icon::after {
-  content: '';
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  width: 8px;
-  height: 2px;
-  border-radius: 2px;
-  background: #d66a0e;
-  transform: rotate(45deg);
-  transform-origin: left center;
+  color: #d66a0e;
+  stroke-width: 2;
 }
 
 .bids-search input {
@@ -4812,34 +4944,11 @@ footer {
 }
 
 .jobs-search-icon {
-  position: relative;
   width: 24px;
   height: 24px;
   margin-right: 2px;
-}
-
-.jobs-search-icon::before {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 12px;
-  height: 12px;
-  border: 2px solid #d66a0e;
-  border-radius: 50%;
-}
-
-.jobs-search-icon::after {
-  content: '';
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  width: 8px;
-  height: 2px;
-  border-radius: 2px;
-  background: #d66a0e;
-  transform: rotate(45deg);
-  transform-origin: left center;
+  color: #d66a0e;
+  stroke-width: 2;
 }
 
 .jobs-search input {
@@ -5233,6 +5342,7 @@ footer {
   border-radius: 999px;
   padding: 13px 24px;
   background: var(--orange);
+  color: #fff;
   box-shadow: 0 10px 24px rgb(237 134 18 / 24%);
 }
 
@@ -5729,6 +5839,16 @@ footer {
   gap: 24px;
   margin-top: auto;
   padding: 13px 19px;
+  background: var(--orange);
+  color: #fff;
+}
+.discover-copy .button:hover {
+  background: var(--orange-dark);
+  color: #fff;
+}
+.discover-copy .button svg {
+  color: currentColor;
+  stroke: currentColor;
 }
 .discover-copy .button span {
   font-size: 22px;
@@ -7399,15 +7519,15 @@ footer {
 }
 
 .hero-actions .button-outline {
-  border-color: #17172f;
-  background: #17172f;
-  color: #fff;
-  box-shadow: 0 10px 24px rgb(23 23 47 / 20%);
+  border-color: var(--orange);
+  background: #fff;
+  color: var(--orange-dark);
+  box-shadow: 0 10px 24px rgb(237 134 18 / 12%);
 }
 
 .hero-actions .button-outline:hover {
-  border-color: #05050d;
-  background: #05050d;
+  border-color: var(--orange);
+  background: var(--orange);
   color: #fff;
 }
 
@@ -7601,6 +7721,7 @@ footer {
 }
 
 .services-page .service-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 15px;
 }
 

@@ -1,3 +1,4 @@
+import { Heart, MousePointerClick, Sparkles, Users } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import Title from '../components/Title'
 import { asset } from '../utils/assets'
@@ -5,10 +6,12 @@ import { asset } from '../utils/assets'
 function CivicPage() {
   const navigate = useNavigate()
   return (
-    <div className="civic-page">
-      <section className="civic-hero">
+    <div className="civic-page min-h-screen bg-orange-50/30 font-sans text-brand-ink">
+      <section className="civic-hero text-center">
         <div>
-          <span className="civic-kicker">✦ Citizen Resources & Participation</span>
+          <span className="civic-kicker inline-flex items-center justify-center">
+            <Sparkles aria-hidden="true" /> Citizen Resources &amp; Participation
+          </span>
           <h1>
             Everything You Need
             <br />
@@ -18,7 +21,7 @@ function CivicPage() {
             Find civic tools, share feedback, report community concerns, and take part in building a
             brighter City of Smiles.
           </p>
-          <div className="civic-actions">
+          <div className="civic-actions flex flex-wrap items-center justify-center">
             <button className="button" onClick={() => navigate('/services')}>
               Explore Resources
             </button>
@@ -26,10 +29,19 @@ function CivicPage() {
               View Consultations
             </a>
           </div>
-          <div className="civic-highlights" aria-label="Citizen resource highlights">
-            <span>◉ Easy access</span>
-            <span>✦ Community-led</span>
-            <span>♡ Open participation</span>
+          <div
+            className="civic-highlights flex flex-wrap items-center justify-center"
+            aria-label="Citizen resource highlights"
+          >
+            <span>
+              <MousePointerClick aria-hidden="true" /> Easy access
+            </span>
+            <span>
+              <Users aria-hidden="true" /> Community-led
+            </span>
+            <span>
+              <Heart aria-hidden="true" /> Open participation
+            </span>
           </div>
         </div>
       </section>
@@ -39,7 +51,7 @@ function CivicPage() {
           title="Connect With Your City"
           description="Use these simple tools to access information, share your voice, and participate in local government."
         />
-        <div className="civic-grid">
+        <div className="civic-grid grid">
           {[
             [
               'civic-survey.jpg',

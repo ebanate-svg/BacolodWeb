@@ -39,10 +39,14 @@ function DeferredSection({
     <section
       ref={sectionRef}
       id={id}
-      className={`${className} deferred-section ${isVisible ? 'is-visible' : 'is-waiting'}`}
+      className={`${className} deferred-section relative ${isVisible ? 'is-visible' : 'is-waiting'}`}
       style={!isVisible ? { minHeight } : undefined}
     >
-      {isVisible ? children : <span className="section-loader" aria-hidden="true" />}
+      {isVisible ? (
+        children
+      ) : (
+        <span className="section-loader absolute left-1/2 top-1/2" aria-hidden="true" />
+      )}
     </section>
   )
 }

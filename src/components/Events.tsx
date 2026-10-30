@@ -1,55 +1,65 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { calendarEvents as fallbackEvents, type CalendarEventItem } from '../data'
+import { loadCalendarEvents } from '../firebase'
 import Title from './Title'
 
-const calendarEvents = [
-  { day: 1, date: 22, start: 8, duration: 1, title: 'MassKara Festival 2025', tone: 'blue' },
-  {
-    day: 3,
-    date: 24,
-    start: 10.5,
-    duration: 1,
-    time: '11:00 - 12:00',
-    title: 'Bacolod Food & Flavors Expo',
-    tone: 'blue',
-  },
-  {
-    day: 5,
-    date: 26,
-    start: 13.5,
-    duration: 1,
-    time: '2:00 - 3:00',
-    title: 'Sunset Beats by the Bay',
-    tone: 'orange',
-  },
-  {
-    day: 2,
-    date: 23,
-    start: 15.5,
-    duration: 1,
-    time: '4:00 - 5:00',
-    title: 'Panaad sa Negros Festival',
-    tone: 'pink',
-  },
-  {
-    day: 5,
-    date: 26,
-    start: 15.5,
-    duration: 1,
-    time: '4:00 - 5:00',
-    title: 'Sounds of the City: Bacolod',
-    tone: 'pink',
-  },
-]
+const tones = ['blue', 'orange', 'pink'] as const
+const sameCalendarDate = (left: Date, right: Date) =>
+  left.getFullYear() === right.getFullYear() &&
+  left.getMonth() === right.getMonth() &&
+  left.getDate() === right.getDate()
+const formatTime = (date: Date) =>
+  date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 
 function Events() {
-  const [calendarDate, setCalendarDate] = useState(() => new Date(2025, 8, 21))
+  const [events, setEvents] = useState<CalendarEventItem[]>(fallbackEvents)
+  const [calendarDate, setCalendarDate] = useState(() => new Date(fallbackEvents[0].startAt))
   const [view, setView] = useState('Week')
+  const parsedEvents = useMemo(
+    () =>
+      events
+        .map((event, index) => {
+          const startAt = new Date(event.startAt)
+          const endAt = new Date(event.endAt || event.startAt)
+          const start = event.isAllDay ? 8 : startAt.getHours() + startAt.getMinutes() / 60
+          const duration = Math.max(0.5, (endAt.getTime() - startAt.getTime()) / 3_600_000)
+          return {
+            ...event,
+            startAt,
+            endAt,
+            start,
+            duration,
+            tone: tones[index % tones.length],
+            time: event.isAllDay ? 'All day' : `${formatTime(startAt)} – ${formatTime(endAt)}`,
+          }
+        })
+        .filter((event) => !Number.isNaN(event.startAt.getTime())),
+    [events],
+  )
+
+  useEffect(() => {
+    let active = true
+    async function fetchEvents() {
+      const result = await loadCalendarEvents(fallbackEvents)
+      if (active) {
+        setEvents(result.items)
+        const nextEvent = result.items.find(
+          (event) => new Date(event.endAt).getTime() >= Date.now(),
+        )
+        if (result.isLive && (nextEvent || result.items[0])) {
+          setCalendarDate(new Date((nextEvent || result.items[0]).startAt))
+        }
+      }
+    }
+    void fetchEvents()
+    return () => {
+      active = false
+    }
+  }, [])
+
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const isSameDate = (date: Date) =>
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate()
+  const isSameDate = (date: Date) => sameCalendarDate(date, today)
   const weekStart = new Date(calendarDate)
   weekStart.setDate(calendarDate.getDate() - calendarDate.getDay())
   weekStart.setHours(0, 0, 0, 0)
@@ -89,21 +99,26 @@ function Events() {
   const monthLeading = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).getDay()
   const monthDays = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate()
   const monthCells = Array.from({ length: 42 }, (_, index) => index - monthLeading + 1)
-  const isEventMonth = calendarDate.getFullYear() === 2025 && calendarDate.getMonth() === 8
-  const dayEvents = isEventMonth
-    ? calendarEvents.filter((event) => event.date === calendarDate.getDate())
-    : []
-  const isEventWeek =
-    weekStart.getFullYear() === 2025 && weekStart.getMonth() === 8 && weekStart.getDate() === 21
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekEnd.getDate() + 7)
+  const dayEvents = parsedEvents.filter((event) => sameCalendarDate(event.startAt, calendarDate))
+  const weekEvents = parsedEvents.filter(
+    (event) => event.startAt >= weekStart && event.startAt < weekEnd,
+  )
+  const monthEvents = parsedEvents.filter(
+    (event) =>
+      event.startAt.getFullYear() === calendarDate.getFullYear() &&
+      event.startAt.getMonth() === calendarDate.getMonth(),
+  )
   return (
-    <section className="events-section page-width">
+    <section className="events-section page-width font-sans text-brand-ink">
       <Title
         title="Upcoming Events"
         description="Stay updated with the latest happenings and activities around Bacolod."
       />
-      <div className="weekly-calendar">
-        <div className="week-toolbar">
-          <div className="week-navigation">
+      <div className="weekly-calendar overflow-hidden rounded-2xl bg-white">
+        <div className="week-toolbar grid items-center">
+          <div className="week-navigation flex items-center">
             <button aria-label={`Previous ${view.toLowerCase()}`} onClick={() => moveCalendar(-1)}>
               ‹
             </button>
@@ -114,7 +129,10 @@ function Events() {
               ›
             </button>
           </div>
-          <div className="calendar-views" aria-label="Calendar view">
+          <div
+            className="calendar-views flex items-center justify-center"
+            aria-label="Calendar view"
+          >
             {['Day', 'Week', 'Month', 'Year'].map((option) => (
               <button
                 key={option}
@@ -128,8 +146,8 @@ function Events() {
           <b>{range}</b>
         </div>
         {view === 'Week' && (
-          <div className="week-scroll">
-            <div className="week-grid">
+          <div className="week-scroll overflow-auto">
+            <div className="week-grid grid">
               <div className="week-corner" />
               {days.map((day) => (
                 <div
@@ -150,17 +168,18 @@ function Events() {
                   </span>
                 </div>
               ))}
-              {isEventWeek &&
-                calendarEvents.map((event) => (
+              {weekEvents
+                .filter((event) => event.start >= 8 && event.start < 17)
+                .map((event) => (
                   <div
-                    key={`${event.day}-${event.title}`}
+                    key={event.id}
                     className={`week-event ${event.tone}`}
                     style={{
-                      gridColumn: event.day + 2,
-                      gridRow: `${Math.round((event.start - 8) * 2) + 2} / span ${event.duration * 2}`,
+                      gridColumn: event.startAt.getDay() + 2,
+                      gridRow: `${Math.round((event.start - 8) * 2) + 2} / span ${Math.max(1, Math.round(event.duration * 2))}`,
                     }}
                   >
-                    {event.time && <small>{event.time}</small>}
+                    <small>{event.time}</small>
                     <b>{event.title}</b>
                   </div>
                 ))}
@@ -179,8 +198,8 @@ function Events() {
                   {dayEvents
                     .filter((event) => Math.floor(event.start) === hour)
                     .map((event) => (
-                      <article className={`calendar-list-event ${event.tone}`} key={event.title}>
-                        <small>{event.time || `${hour}:00`}</small>
+                      <article className={`calendar-list-event ${event.tone}`} key={event.id}>
+                        <small>{event.time}</small>
                         <b>{event.title}</b>
                       </article>
                     ))}
@@ -190,13 +209,13 @@ function Events() {
           </div>
         )}
         {view === 'Month' && (
-          <div className="month-view">
-            <div className="month-weekdays">
+          <div className="month-view overflow-hidden">
+            <div className="month-weekdays grid grid-cols-7 text-center">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
                 <b key={day}>{day}</b>
               ))}
             </div>
-            <div className="month-grid-view">
+            <div className="month-grid-view grid grid-cols-7">
               {monthCells.map((date, index) => {
                 const cellDate = new Date(monthDate.getFullYear(), monthDate.getMonth(), date)
                 return (
@@ -205,15 +224,14 @@ function Events() {
                     key={index}
                   >
                     <span>{date > 0 && date <= monthDays ? date : ''}</span>
-                    {isEventMonth &&
-                      calendarEvents
-                        .filter((event) => event.date === date)
-                        .slice(0, 2)
-                        .map((event) => (
-                          <small className={event.tone} key={event.title}>
-                            {event.title}
-                          </small>
-                        ))}
+                    {monthEvents
+                      .filter((event) => event.startAt.getDate() === date)
+                      .slice(0, 2)
+                      .map((event) => (
+                        <small className={event.tone} key={event.id}>
+                          {event.title}
+                        </small>
+                      ))}
                   </div>
                 )
               })}
@@ -221,7 +239,7 @@ function Events() {
           </div>
         )}
         {view === 'Year' && (
-          <div className="year-view">
+          <div className="year-view grid">
             {Array.from({ length: 12 }, (_, month) => (
               <div className="mini-month" key={month}>
                 <b>{new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long' })}</b>
@@ -238,10 +256,12 @@ function Events() {
                       year === today.getFullYear() &&
                       month === today.getMonth() &&
                       date === today.getDate()
-                    const hasEvent =
-                      year === 2025 &&
-                      month === 8 &&
-                      calendarEvents.some((event) => event.date === date)
+                    const hasEvent = parsedEvents.some(
+                      (event) =>
+                        event.startAt.getFullYear() === year &&
+                        event.startAt.getMonth() === month &&
+                        event.startAt.getDate() === date,
+                    )
                     return (
                       <span
                         className={`${hasEvent ? 'has-event ' : ''}${isToday ? 'is-today' : ''}`}
