@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app'
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 import type {
   BidItem,
@@ -21,6 +22,15 @@ const config = {
 
 export const firebaseReady = Boolean(config.apiKey && config.projectId && config.appId)
 const app = firebaseReady ? initializeApp(config) : null
+const appCheckSiteKey = import.meta.env.VITE_FIREBASE_APPCHECK_SITE_KEY
+
+if (app && appCheckSiteKey) {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
+    isTokenAutoRefreshEnabled: true,
+  })
+}
+
 const functions = app
   ? getFunctions(app, import.meta.env.VITE_FIREBASE_FUNCTIONS_REGION || 'asia-southeast1')
   : null
@@ -129,18 +139,4 @@ export async function loadLocalBusinesses(
     console.warn('Using local businesses because getLocalBusinesses is unavailable.', error)
     return filterFallback()
   }
-}
-
-export async function submitRequest(
-  payload: Record<string, string>,
-): Promise<{ reference: string; demo?: boolean }> {
-  if (!functions) {
-    await new Promise((resolve) => setTimeout(resolve, 550))
-    return { reference: `DEMO-${Date.now().toString().slice(-7)}`, demo: true }
-  }
-  const callable = httpsCallable<Record<string, string>, { reference: string }>(
-    functions,
-    'submitServiceRequest',
-  )
-  return (await callable(payload)).data
 }

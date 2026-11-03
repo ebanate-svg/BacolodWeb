@@ -1,11 +1,12 @@
 import { ArrowLeft, ArrowRight, Heart, MapPin, Search, Sparkles, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import RequestModal from '../components/RequestModal'
 import Title from '../components/Title'
 import { businesses, localBusinesses as fallbackBusinesses, type LocalBusinessItem } from '../data'
 import { loadLocalBusinesses } from '../firebase'
 import { asset } from '../utils/assets'
+
+const G_APP_URL = 'https://play.google.com/store/apps/details?id=co.fortistech.bacolodgapp'
 
 function BusinessPage() {
   const [query, setQuery] = useState('')
@@ -228,7 +229,6 @@ function BusinessPage() {
 }
 
 function BusinessDetail() {
-  const [feedback, setFeedback] = useState(false)
   return (
     <div>
       <section
@@ -265,9 +265,9 @@ function BusinessDetail() {
             <p>11:00 AM – 10:00 PM</p>
             <p>21st Street, Bacolod City</p>
             <p>(034) 434-4091</p>
-            <button className="button" onClick={() => setFeedback(true)}>
+            <a className="button" href={G_APP_URL} target="_blank" rel="noopener noreferrer">
               Leave feedback
-            </button>
+            </a>
           </aside>
         </div>
         <Title title="Popular dishes" />
@@ -283,7 +283,6 @@ function BusinessDetail() {
           ))}
         </div>
       </section>
-      {feedback && <RequestModal type="Business Feedback" onClose={() => setFeedback(false)} />}
     </div>
   )
 }

@@ -64,8 +64,10 @@ The functions deploy to `asia-southeast1`, matching `src/firebase.ts`.
   records are filtered out.
 - Reads are bounded and callable payload text is length-limited.
 - Public website data is intentionally readable without Firebase Authentication. Authentication
-  would not make public data secret. For abuse protection, enable Firebase App Check for the web
-  app, initialize App Check in the React client, and then add `enforceAppCheck: true` to
-  `publicCallableOptions`.
+  would not make public data secret. Firebase App Check is initialized by the React client when
+  `VITE_FIREBASE_APPCHECK_SITE_KEY` is configured, and every public callable uses
+  `enforceAppCheck: true` to reject requests without a valid token.
+- Public responses are cached in warm function instances to reduce repeated Firestore reads. The
+  bids feed keeps its separate 15-minute source cache.
 - Keep all write operations in separate authenticated callable functions with role checks. Never
   add writes to these public feed functions.

@@ -1,7 +1,15 @@
 node_modules/
 dist/
 .firebase/
+
 .env
+.env.*
+!.env.example
+
+functions/.env
+functions/.env.*
+function/.secret.local
+
 firebase-debug.log
 functions/node_modules/
 functions/lib/
