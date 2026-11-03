@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https')
 const { initializeApp } = require('firebase-admin/app')
-const { getFirestore, FieldValue } = require('firebase-admin/firestore')
+const { getFirestore } = require('firebase-admin/firestore')
 
 initializeApp()
 
@@ -38,19 +38,9 @@ const isPublic = (record) => {
   const visibility = asText(record.visibility, 30).toLowerCase()
   const approvalStatus = asText(record.approvalStatus, 30).toLowerCase()
   return (
-    (!approvalStatus || approvalStatus === 'approved') &&
-    ![
-      'draft',
-      'pending',
-      'rejected',
-      'inactive',
-      'hidden',
-      'deleted',
-      'closed',
-      'expired',
-      'archived',
-    ].includes(status) &&
-    !['private', 'hidden'].includes(visibility)
+    approvalStatus === 'approved' &&
+    visibility === 'public' &&
+    ['active', 'published'].includes(status)
   )
 }
 const timestampMillis = (value) => value?.toMillis?.() || value?.toDate?.()?.getTime?.() || 0
@@ -68,9 +58,33 @@ const formatSalary = (salary) => {
 const publicCallableOptions = {
   region: 'asia-southeast1',
   cors: true,
+  enforceAppCheck: true,
   maxInstances: 10,
   timeoutSeconds: 30,
 }
+
+const responseCache = new Map()
+const cachedResponse = async (key, ttlMs, loader) => {
+  const cached = responseCache.get(key)
+  if (cached && cached.expiresAt > Date.now()) return cached.value
+
+  const pending = Promise.resolve().then(loader)
+  responseCache.set(key, { expiresAt: Date.now() + ttlMs, value: pending })
+
+  try {
+    const value = await pending
+    responseCache.set(key, { expiresAt: Date.now() + ttlMs, value })
+    return value
+  } catch (error) {
+    responseCache.delete(key)
+    throw error
+  }
+}
+
+const cachedOnCall = (key, ttlMs, handler) =>
+  onCall(publicCallableOptions, (request) =>
+    cachedResponse(typeof key === 'function' ? key(request) : key, ttlMs, () => handler(request)),
+  )
 
 const BIDS_SOURCE_URL = 'https://bacolodcity.gov.ph/bids-and-awards/'
 const BIDS_CACHE_TTL_MS = 15 * 60 * 1000
@@ -240,38 +254,36 @@ exports.getBids = onCall(publicCallableOptions, async (request) => {
   }
 })
 
-exports.getLatestNews = onCall(
-  { region: 'asia-southeast1', cors: true, maxInstances: 10 },
-  async () => {
-    const snapshot = await getFirestore()
-      .collection('news')
-      .orderBy('createdAt', 'desc')
-      .limit(25)
-      .get()
-    const items = snapshot.docs
-      .map((document) => {
-        const news = document.data() || {}
-        return {
-          id: document.id,
-          category: asText(news.category, 60) || 'News',
-          date: asIsoDate(news.publishedAt) || asIsoDate(news.createdAt),
-          title: asText(news.title, 180),
-          copy: asText(news.body || news.description, 360),
-          image: asText(news.photoUrl, 2000),
-          url: asText(news.url || news.linkUrl, 2000),
-          visibility: asText(news.visibility, 30).toLowerCase(),
-          status: asText(news.status, 30).toLowerCase(),
-        }
-      })
-      .filter((item) => item.title && item.visibility !== 'private' && item.status !== 'draft')
-      .slice(0, 3)
-      .map(({ visibility, status, ...item }) => item)
+exports.getLatestNews = cachedOnCall('latest-news', 5 * 60 * 1000, async () => {
+  const snapshot = await getFirestore()
+    .collection('news')
+    .orderBy('createdAt', 'desc')
+    .limit(25)
+    .get()
+  const items = snapshot.docs
+    .map((document) => {
+      const news = document.data() || {}
+      return {
+        id: document.id,
+        category: asText(news.category, 60) || 'News',
+        date: asIsoDate(news.publishedAt) || asIsoDate(news.createdAt),
+        title: asText(news.title, 180),
+        copy: asText(news.body || news.description, 360),
+        image: asText(news.photoUrl, 2000),
+        url: asText(news.url || news.linkUrl, 2000),
+        visibility: asText(news.visibility, 30).toLowerCase(),
+        status: asText(news.status, 30).toLowerCase(),
+        public: isPublic(news),
+      }
+    })
+    .filter((item) => item.title && item.public)
+    .slice(0, 3)
+    .map(({ visibility, status, public: isPublicItem, ...item }) => item)
 
-    return { items }
-  },
-)
+  return { items }
+})
 
-exports.getTopDestinations = onCall(publicCallableOptions, async () => {
+exports.getTopDestinations = cachedOnCall('top-destinations', 10 * 60 * 1000, async () => {
   const snapshot = await getFirestore().collection('tourist_spots').limit(50).get()
   const items = snapshot.docs
     .map((document) => {
@@ -300,7 +312,7 @@ exports.getTopDestinations = onCall(publicCallableOptions, async () => {
   return { items }
 })
 
-exports.getTopRestaurants = onCall(publicCallableOptions, async () => {
+exports.getTopRestaurants = cachedOnCall('top-restaurants', 10 * 60 * 1000, async () => {
   const snapshot = await getFirestore().collection('local_businesses').limit(100).get()
   const diningTerms = [
     'restaurant',
@@ -346,58 +358,61 @@ exports.getTopRestaurants = onCall(publicCallableOptions, async () => {
 })
 
 async function getPublicJobs() {
-  const database = getFirestore()
-  const snapshot = await database.collectionGroup('job_listings').limit(100).get()
-  const businessIds = [
-    ...new Set(
-      snapshot.docs
-        .map(
-          (document) => document.ref.parent.parent?.id || asText(document.data()?.businessId, 160),
+  return cachedResponse('public-jobs', 5 * 60 * 1000, async () => {
+    const database = getFirestore()
+    const snapshot = await database.collectionGroup('job_listings').limit(100).get()
+    const businessIds = [
+      ...new Set(
+        snapshot.docs
+          .map(
+            (document) =>
+              document.ref.parent.parent?.id || asText(document.data()?.businessId, 160),
+          )
+          .filter((id) => typeof id === 'string' && id.length > 0),
+      ),
+    ]
+    const businessDocuments = businessIds.length
+      ? await database.getAll(
+          ...businessIds.map((id) => database.collection('local_businesses').doc(id)),
         )
-        .filter((id) => typeof id === 'string' && id.length > 0),
-    ),
-  ]
-  const businessDocuments = businessIds.length
-    ? await database.getAll(
-        ...businessIds.map((id) => database.collection('local_businesses').doc(id)),
-      )
-    : []
-  const businessNames = new Map(
-    businessDocuments.map((document) => [
-      document.id,
-      asText(document.data()?.name, 160) || 'Local Business',
-    ]),
-  )
-  const now = Date.now()
-
-  return snapshot.docs
-    .map((document) => {
-      const job = document.data() || {}
-      const businessId = document.ref.parent.parent?.id || asText(job.businessId, 160)
-      const deadlineMillis = timestampMillis(job.deadline)
-      return {
-        id: `${businessId || 'city'}-${document.id}`,
-        title: asText(job.jobTitle || job.title || job.position, 180),
-        department:
-          asText(job.department || job.office || job.agency, 160) ||
-          businessNames.get(businessId) ||
-          'City Government of Bacolod',
-        salary: formatSalary(job.salary),
-        type: asText(job.employmentType || job.type, 80) || 'Open position',
-        location: asText(job.location, 180) || 'Bacolod City',
-        openings: Math.max(1, Math.round(asNumber(job.numberOfOpenings, 1))),
-        postedAt: asIsoDate(job.datePosted || job.createdAt),
-        deadline: asIsoDate(job.deadline),
-        applyUrl: asText(job.applicationUrl || job.applyUrl, 2000),
-        postedMillis: timestampMillis(job.datePosted || job.createdAt),
-        deadlineMillis,
-        public: isPublic(job),
-      }
-    })
-    .filter(
-      (item) => item.public && item.title && (!item.deadlineMillis || item.deadlineMillis >= now),
+      : []
+    const businessNames = new Map(
+      businessDocuments.map((document) => [
+        document.id,
+        asText(document.data()?.name, 160) || 'Local Business',
+      ]),
     )
-    .sort((a, b) => b.postedMillis - a.postedMillis)
+    const now = Date.now()
+
+    return snapshot.docs
+      .map((document) => {
+        const job = document.data() || {}
+        const businessId = document.ref.parent.parent?.id || asText(job.businessId, 160)
+        const deadlineMillis = timestampMillis(job.deadline)
+        return {
+          id: `${businessId || 'city'}-${document.id}`,
+          title: asText(job.jobTitle || job.title || job.position, 180),
+          department:
+            asText(job.department || job.office || job.agency, 160) ||
+            businessNames.get(businessId) ||
+            'City Government of Bacolod',
+          salary: formatSalary(job.salary),
+          type: asText(job.employmentType || job.type, 80) || 'Open position',
+          location: asText(job.location, 180) || 'Bacolod City',
+          openings: Math.max(1, Math.round(asNumber(job.numberOfOpenings, 1))),
+          postedAt: asIsoDate(job.datePosted || job.createdAt),
+          deadline: asIsoDate(job.deadline),
+          applyUrl: asText(job.applicationUrl || job.applyUrl, 2000),
+          postedMillis: timestampMillis(job.datePosted || job.createdAt),
+          deadlineMillis,
+          public: isPublic(job),
+        }
+      })
+      .filter(
+        (item) => item.public && item.title && (!item.deadlineMillis || item.deadlineMillis >= now),
+      )
+      .sort((a, b) => b.postedMillis - a.postedMillis)
+  })
 }
 
 exports.getLatestJobs = onCall(publicCallableOptions, async () => {
@@ -414,7 +429,7 @@ exports.getJobDepartments = onCall(publicCallableOptions, async () => {
   return { items }
 })
 
-exports.getCalendarEvents = onCall(publicCallableOptions, async () => {
+exports.getCalendarEvents = cachedOnCall('calendar-events', 5 * 60 * 1000, async () => {
   const snapshot = await getFirestore().collection('events').limit(100).get()
   const items = snapshot.docs
     .map((document) => {
@@ -443,83 +458,80 @@ exports.getCalendarEvents = onCall(publicCallableOptions, async () => {
   return { items }
 })
 
-exports.getLocalBusinesses = onCall(publicCallableOptions, async (request) => {
-  const cursor = asText(request.data?.cursor, 200)
-  const search = asText(request.data?.query, 100).toLowerCase()
-  const selectedCategory = asText(request.data?.category, 100)
-  const snapshot = await getFirestore().collection('local_businesses').limit(200).get()
-  const allBusinesses = snapshot.docs
-    .map((document) => {
-      const business = document.data() || {}
-      const categoryValue = business.category
-      const category = Array.isArray(categoryValue)
-        ? categoryValue
-            .map((value) => asText(value, 80))
-            .filter(Boolean)
-            .join(' · ')
-        : asText(categoryValue || business.type, 160)
-      return {
-        document,
-        id: document.id,
-        name: asText(business.name, 160),
-        category: category || 'Local Business',
-        image: firstImageUrl(business),
-        location: asText(business.location || business.address, 240) || 'Bacolod City',
-        description: asText(business.description, 500),
-        website: asText(business.website || business.url, 2000),
-        aggregateRating: asNumber(business.averageRating || business.rating),
-        aggregateReviewCount: Math.max(
-          0,
-          Math.round(asNumber(business.reviewCount || business.reviewsCount)),
-        ),
-        public: isPublic(business),
-      }
-    })
-    .filter(
-      (business) =>
-        business.public &&
-        business.name &&
-        (!search ||
-          `${business.name} ${business.category} ${business.description}`
-            .toLowerCase()
-            .includes(search)) &&
-        (!selectedCategory ||
-          selectedCategory === 'All Categories' ||
-          business.category.toLowerCase().includes(selectedCategory.toLowerCase())),
-    )
-    .sort((a, b) => a.name.localeCompare(b.name))
+exports.getLocalBusinesses = cachedOnCall(
+  (request) => {
+    const cursor = asText(request.data?.cursor, 200)
+    const search = asText(request.data?.query, 100).toLowerCase()
+    const category = asText(request.data?.category, 100).toLowerCase()
+    return `local-businesses:${cursor}:${search}:${category}`
+  },
+  2 * 60 * 1000,
+  async (request) => {
+    const cursor = asText(request.data?.cursor, 200)
+    const search = asText(request.data?.query, 100).toLowerCase()
+    const selectedCategory = asText(request.data?.category, 100)
+    const snapshot = await getFirestore().collection('local_businesses').limit(200).get()
+    const allBusinesses = snapshot.docs
+      .map((document) => {
+        const business = document.data() || {}
+        const categoryValue = business.category
+        const category = Array.isArray(categoryValue)
+          ? categoryValue
+              .map((value) => asText(value, 80))
+              .filter(Boolean)
+              .join(' · ')
+          : asText(categoryValue || business.type, 160)
+        return {
+          document,
+          id: document.id,
+          name: asText(business.name, 160),
+          category: category || 'Local Business',
+          image: firstImageUrl(business),
+          location: asText(business.location || business.address, 240) || 'Bacolod City',
+          description: asText(business.description, 500),
+          website: asText(business.website || business.url, 2000),
+          aggregateRating: asNumber(business.averageRating || business.rating),
+          aggregateReviewCount: Math.max(
+            0,
+            Math.round(asNumber(business.reviewCount || business.reviewsCount)),
+          ),
+          public: isPublic(business),
+        }
+      })
+      .filter(
+        (business) =>
+          business.public &&
+          business.name &&
+          (!search ||
+            `${business.name} ${business.category} ${business.description}`
+              .toLowerCase()
+              .includes(search)) &&
+          (!selectedCategory ||
+            selectedCategory === 'All Categories' ||
+            business.category.toLowerCase().includes(selectedCategory.toLowerCase())),
+      )
+      .sort((a, b) => a.name.localeCompare(b.name))
 
-  const categories = [
-    ...new Set(
-      snapshot.docs
-        .filter((document) => isPublic(document.data() || {}))
-        .flatMap((document) => {
-          const value = document.data()?.category
-          return Array.isArray(value) ? value : [value]
-        })
-        .map((value) => asText(value, 80))
-        .filter(Boolean),
-    ),
-  ].sort((a, b) => a.localeCompare(b))
-  const cursorIndex = cursor ? allBusinesses.findIndex((business) => business.id === cursor) + 1 : 0
-  const start = Math.max(0, cursorIndex)
-  const page = allBusinesses.slice(start, start + 9)
-  const items = await Promise.all(
-    page.map(async (business) => {
-      let rating = business.aggregateRating
-      let reviewCount = business.aggregateReviewCount
-
-      if (!reviewCount) {
-        const reviews = await business.document.ref.collection('reviews').limit(200).get()
-        const ratings = reviews.docs
-          .map((document) => document.data() || {})
-          .filter((review) => isPublic(review))
-          .map((review) => asNumber(review.rating || review.stars))
-          .filter((value) => value >= 1 && value <= 5)
-        reviewCount = ratings.length
-        rating = reviewCount ? ratings.reduce((total, value) => total + value, 0) / reviewCount : 0
-      }
-
+    const categories = [
+      ...new Set(
+        snapshot.docs
+          .filter((document) => isPublic(document.data() || {}))
+          .flatMap((document) => {
+            const value = document.data()?.category
+            return Array.isArray(value) ? value : [value]
+          })
+          .map((value) => asText(value, 80))
+          .filter(Boolean),
+      ),
+    ].sort((a, b) => a.localeCompare(b))
+    const cursorIndex = cursor
+      ? allBusinesses.findIndex((business) => business.id === cursor) + 1
+      : 0
+    const start = Math.max(0, cursorIndex)
+    const page = allBusinesses.slice(start, start + 9)
+    const items = page.map((business) => {
+      const rating = business.aggregateRating
+      const reviewCount = business.aggregateReviewCount
       const {
         document,
         aggregateRating,
@@ -528,39 +540,13 @@ exports.getLocalBusinesses = onCall(publicCallableOptions, async (request) => {
         ...item
       } = business
       return reviewCount ? { ...item, rating, reviewCount } : item
-    }),
-  )
-
-  return {
-    items,
-    nextCursor: start + 9 < allBusinesses.length ? page.at(-1)?.id || null : null,
-    total: allBusinesses.length,
-    categories,
-  }
-})
-
-exports.submitServiceRequest = onCall(
-  { region: 'asia-southeast1', cors: true },
-  async (request) => {
-    const { service, name, email, details } = request.data || {}
-    if (
-      ![service, name, email, details].every((value) => typeof value === 'string' && value.trim())
-    ) {
-      throw new HttpsError('invalid-argument', 'All request fields are required.')
-    }
-    if (!/^\S+@\S+\.\S+$/.test(email) || name.length > 120 || details.length > 3000) {
-      throw new HttpsError('invalid-argument', 'Request details are invalid.')
-    }
-    const reference = `BCD-${new Date().getFullYear()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
-    await getFirestore().collection('serviceRequests').add({
-      service: service.trim(),
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      details: details.trim(),
-      reference,
-      status: 'received',
-      createdAt: FieldValue.serverTimestamp(),
     })
-    return { reference }
+
+    return {
+      items,
+      nextCursor: start + 9 < allBusinesses.length ? page.at(-1)?.id || null : null,
+      total: allBusinesses.length,
+      categories,
+    }
   },
 )

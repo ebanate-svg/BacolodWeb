@@ -9,14 +9,13 @@ import {
   SquarePlus,
   TriangleAlert,
 } from 'lucide-react'
-import { useState } from 'react'
 import Events from '../components/Events'
-import RequestModal from '../components/RequestModal'
 import Title from '../components/Title'
 import { asset } from '../utils/assets'
 
+const G_APP_URL = 'https://play.google.com/store/apps/details?id=co.fortistech.bacolodgapp'
+
 function WastePage() {
-  const [modal, setModal] = useState<string | null>(null)
   return (
     <div className="waste-page min-h-screen bg-orange-50/30 font-sans text-brand-ink">
       <section className="waste-hero text-center">
@@ -51,7 +50,7 @@ function WastePage() {
       </section>
       <section className="waste-content page-width">
         <div className="waste-actions flex flex-wrap items-center justify-center">
-          <button className="button" onClick={() => setModal('Schedule Pickup')}>
+          <a className="button" href={G_APP_URL} target="_blank" rel="noopener noreferrer">
             <i aria-hidden="true">
               <SquarePlus />
             </i>
@@ -59,10 +58,12 @@ function WastePage() {
               <b>Schedule Pickup</b>
               <small>Request a collection</small>
             </span>
-          </button>
-          <button
+          </a>
+          <a
             className="button waste-action-dark"
-            onClick={() => setModal('Report Waste Issue')}
+            href={G_APP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
           >
             <i aria-hidden="true">
               <TriangleAlert />
@@ -71,7 +72,7 @@ function WastePage() {
               <b>Report an Issue</b>
               <small>Tell the city about a concern</small>
             </span>
-          </button>
+          </a>
           <a className="button waste-action-light" href="#disposal-guide">
             <i aria-hidden="true">
               <Recycle />
@@ -113,9 +114,9 @@ function WastePage() {
             <h2>Never miss a pickup again</h2>
             <p>Set a reminder for your barangay’s next collection schedule.</p>
           </div>
-          <button className="button" onClick={() => setModal('Schedule Pickup')}>
+          <a className="button" href={G_APP_URL} target="_blank" rel="noopener noreferrer">
             Set a Reminder
-          </button>
+          </a>
         </div>
       </section>
       <section id="disposal-guide" className="disposal-guide page-width">
@@ -149,7 +150,6 @@ function WastePage() {
           ))}
         </div>
       </section>
-      {modal && <RequestModal type={modal} onClose={() => setModal(null)} />}
     </div>
   )
 }

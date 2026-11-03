@@ -12,12 +12,12 @@ function CivicPage() {
           <span className="civic-kicker inline-flex items-center justify-center">
             <Sparkles aria-hidden="true" /> Citizen Resources &amp; Participation
           </span>
-          <h1>
+          <h1 className="text-center">
             Everything You Need
             <br />
             to Shape Bacolod
           </h1>
-          <p>
+          <p className="text-center">
             Find civic tools, share feedback, report community concerns, and take part in building a
             brighter City of Smiles.
           </p>

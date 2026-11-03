@@ -9,6 +9,7 @@ const required = [
   'VITE_FIREBASE_STORAGE_BUCKET',
   'VITE_FIREBASE_MESSAGING_SENDER_ID',
   'VITE_FIREBASE_APP_ID',
+  'VITE_FIREBASE_APPCHECK_SITE_KEY',
 ]
 
 const missing = required.filter((name) => !config[name]?.trim())
