@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "bacolod-g-app",
+    "prod": "bacolod-g-app"
+  }
+}
