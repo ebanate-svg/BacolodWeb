@@ -1888,7 +1888,12 @@ footer {
 .tourism-actions .button {
   min-width: 154px;
   border-radius: 999px;
+  color: #fff;
   box-shadow: 0 12px 25px rgb(229 111 10 / 20%);
+}
+
+.tourism-actions .button:not(.button-light):hover {
+  color: #fff;
 }
 
 .tourism-actions .button-light {
@@ -6497,13 +6502,6 @@ footer {
 .nav-dropdown > button[aria-expanded='true'] b {
   transform: rotate(180deg);
 }
-@media (hover: hover) and (min-width: 701px) {
-  .nav-dropdown:hover > .dropdown,
-  .nav-dropdown:focus-within > .dropdown {
-    display: grid;
-  }
-}
-
 /* Festive landing page refresh */
 .landing-page {
   position: relative;
@@ -6960,6 +6958,10 @@ footer {
 .civic-page .civic-hero > div {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .civic-page .civic-kicker {
@@ -6978,7 +6980,7 @@ footer {
 
 .civic-page .civic-hero h1 {
   max-width: 710px;
-  margin: 20px 0 15px;
+  margin: 20px auto 15px;
   background: linear-gradient(105deg, #13264b 15%, #e86d08 88%);
   background-clip: text;
   color: transparent;
@@ -6989,6 +6991,8 @@ footer {
 
 .civic-page .civic-hero p {
   max-width: 600px;
+  margin-right: auto;
+  margin-left: auto;
   color: #4f5d73;
   font-size: 15px;
   line-height: 1.65;
@@ -7003,6 +7007,19 @@ footer {
 .civic-actions .button {
   min-width: 154px;
   border-radius: 999px;
+}
+
+.civic-actions .civic-primary-action {
+  border-color: var(--orange);
+  background: var(--orange);
+  color: #fff;
+  box-shadow: 0 10px 24px rgb(237 134 18 / 24%);
+}
+
+.civic-actions .civic-primary-action:hover {
+  border-color: var(--orange-dark);
+  background: var(--orange-dark);
+  color: #fff;
 }
 
 .civic-actions .button-light {
@@ -8313,9 +8330,7 @@ footer {
   height: 64px;
   padding: 0 9px 0 14px;
   gap: 24px;
-  border: 1px solid #f0dfcb;
   border-radius: 18px;
-  background: rgb(255 255 255 / 90%);
 }
 
 .logo-link {
@@ -8435,14 +8450,6 @@ footer {
 .nav-dropdown > button[aria-expanded='true'] .dropdown-chevron {
   margin-top: 3px;
   transform: rotate(225deg);
-}
-
-@media (min-width: 701px) {
-  .nav-dropdown:hover .dropdown-chevron,
-  .nav-dropdown:focus-within .dropdown-chevron {
-    margin-top: 3px;
-    transform: rotate(225deg);
-  }
 }
 
 .dropdown {
