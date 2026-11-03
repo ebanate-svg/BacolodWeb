@@ -39,11 +39,29 @@ type LatestNewsResponse = { items: NewsItem[] }
 export type NewsFeedResult = { items: NewsItem[]; isLive: boolean }
 export type TourismFeedResult<T> = { items: T[]; isLive: boolean }
 
+const functionTimeoutMs = 12_000
+
+async function withFunctionTimeout<T>(request: Promise<T>, functionName: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(
+      () => reject(new Error(`${functionName} did not respond within ${functionTimeoutMs}ms.`)),
+      functionTimeoutMs,
+    )
+  })
+
+  try {
+    return await Promise.race([request, timeout])
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId)
+  }
+}
+
 export async function loadLatestNews(fallback: NewsItem[]): Promise<NewsFeedResult> {
   if (!functions) return { items: fallback, isLive: false }
   try {
     const callable = httpsCallable<void, LatestNewsResponse>(functions, 'getLatestNews')
-    const { data } = await callable()
+    const { data } = await withFunctionTimeout(callable(), 'getLatestNews')
     return Array.isArray(data.items) && data.items.length > 0
       ? { items: data.items, isLive: true }
       : { items: fallback, isLive: false }
@@ -67,7 +85,7 @@ async function loadPublicCollection<T>(
 
   try {
     const callable = httpsCallable<void, { items: T[] }>(functions, functionName)
-    const { data } = await callable()
+    const { data } = await withFunctionTimeout(callable(), functionName)
     return Array.isArray(data.items) && data.items.length > 0
       ? { items: data.items, isLive: true }
       : { items: fallback, isLive: false }
@@ -133,7 +151,7 @@ export async function loadLocalBusinesses(
       { cursor?: string | null; query?: string; category?: string },
       Omit<LocalBusinessPage, 'isLive'>
     >(functions, 'getLocalBusinesses')
-    const { data } = await callable(params)
+    const { data } = await withFunctionTimeout(callable(params), 'getLocalBusinesses')
     return { ...data, isLive: true }
   } catch (error) {
     console.warn('Using local businesses because getLocalBusinesses is unavailable.', error)

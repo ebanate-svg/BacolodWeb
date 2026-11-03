@@ -1,10 +1,9 @@
 import { Heart, MousePointerClick, Sparkles, Users } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import Title from '../components/Title'
 import { asset } from '../utils/assets'
 
 function CivicPage() {
-  const navigate = useNavigate()
   return (
     <div className="civic-page min-h-screen bg-orange-50/30 font-sans text-brand-ink">
       <section className="civic-hero text-center">
@@ -22,9 +21,9 @@ function CivicPage() {
             brighter City of Smiles.
           </p>
           <div className="civic-actions flex flex-wrap items-center justify-center">
-            <button className="button" onClick={() => navigate('/services')}>
+            <Link className="button civic-primary-action" to="/services">
               Explore Resources
-            </button>
+            </Link>
             <a className="button button-light" href="#consultations">
               View Consultations
             </a>

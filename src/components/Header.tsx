@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { asset } from '../utils/assets'
 
@@ -6,10 +6,40 @@ function Header() {
   const location = useLocation()
   const [open, setOpen] = useState(false)
   const [servicesOpen, setServicesOpen] = useState(false)
+  const servicesDropdownRef = useRef<HTMLSpanElement>(null)
+  const servicesButtonRef = useRef<HTMLButtonElement>(null)
   const servicesActive =
     location.pathname.startsWith('/services') ||
     location.pathname.startsWith('/waste') ||
     location.pathname.startsWith('/local-business')
+
+  useEffect(() => {
+    setOpen(false)
+    setServicesOpen(false)
+  }, [location.pathname])
+
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      if (!servicesDropdownRef.current?.contains(event.target as Node)) {
+        setServicesOpen(false)
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && servicesOpen) {
+        setServicesOpen(false)
+        servicesButtonRef.current?.focus()
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [servicesOpen])
 
   return (
     <header className="site-header sticky top-0 z-50 w-full bg-white font-sans">
@@ -25,7 +55,10 @@ function Header() {
           className="menu-toggle items-center justify-center"
           aria-expanded={open}
           aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
-          onClick={() => setOpen((value) => !value)}
+          onClick={() => {
+            setOpen((value) => !value)
+            if (open) setServicesOpen(false)
+          }}
         >
           <span />
           <span />
@@ -39,16 +72,9 @@ function Header() {
           }}
         >
           <NavLink to="/">Home</NavLink>
-          <span
-            className="nav-dropdown relative"
-            onMouseEnter={() => setServicesOpen(true)}
-            onMouseLeave={() => setServicesOpen(false)}
-            onFocus={() => setServicesOpen(true)}
-            onBlur={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget)) setServicesOpen(false)
-            }}
-          >
+          <span ref={servicesDropdownRef} className="nav-dropdown relative">
             <button
+              ref={servicesButtonRef}
               className={servicesActive ? 'active' : ''}
               aria-haspopup="true"
               aria-expanded={servicesOpen}

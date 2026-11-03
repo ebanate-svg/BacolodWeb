@@ -85,7 +85,7 @@ export const services: Service[] = [
     icon: 'business',
     title: 'BPLO',
     description: 'Business permits, renewals, and registrations.',
-    href: '/services/bplo',
+    href: 'https://permits.bacolodcity.gov.ph/',
   },
   {
     id: 'mitcs',
