@@ -454,26 +454,34 @@ type LocalBusinessParams = { cursor?: string | null; query?: string; category?: 
 
 const businessPageSize = 9
 
-// The allowed business types. Reading every business to build this list would cost far more.
-const businessCategories = [
-  'accommodation',
-  'automotive',
-  'bakery',
-  'bar',
-  'cafe',
-  'education',
-  'entertainment',
-  'fitness',
-  'grocery',
-  'hardware',
-  'healthcare',
-  'other',
-  'pharmacy',
-  'restaurant',
-  'retail',
-  'salon',
-  'services',
-].map(capitalize)
+let categoryRequest: Promise<Map<string, string[]>> | null = null
+
+// The filter lists the categories public businesses really use, read once per page load
+// (category field only). Each label maps to every stored spelling of it, such as "cafe" and
+// "Cafe", because the stored values are not all written the same way.
+const readBusinessCategories = () => {
+  categoryRequest ??= readPublicFields({
+    collectionId: 'local_businesses',
+    fields: ['category'],
+    filters: approvedAndPublic,
+    limit: 1000,
+  })
+    .then((rows) => {
+      const categories = new Map<string, string[]>()
+      for (const row of rows) {
+        const stored = asText(row.category, 160)
+        if (!stored) continue
+        const label = capitalize(stored)
+        categories.set(label, [...new Set([...(categories.get(label) ?? []), stored])])
+      }
+      return categories
+    })
+    .catch((error) => {
+      categoryRequest = null
+      throw error
+    })
+  return categoryRequest
+}
 
 const toLocalBusiness = (business: DocumentData): LocalBusinessItem => {
   return {
@@ -492,10 +500,10 @@ async function readBusinessPage(
   params: LocalBusinessParams,
 ): Promise<Omit<LocalBusinessPage, 'isLive'>> {
   const search = params.query?.trim().toLowerCase() || ''
-  const category =
-    params.category && params.category !== 'All Categories' ? params.category.toLowerCase() : ''
-  // Stored categories are not all lowercase yet, for example "cafe" and "Restaurant".
-  const categoryValues = [category, capitalize(category)]
+  const category = params.category && params.category !== 'All Categories' ? params.category : ''
+  const categoryMap = await readBusinessCategories()
+  const businessCategories = [...categoryMap.keys()].sort((a, b) => a.localeCompare(b))
+  const categoryValues = (categoryMap.get(category) ?? [category]).slice(0, 30)
   const sortField = search ? 'normalizedName' : 'name'
   const filters: FieldFilter[] = [...approvedAndPublic]
   if (search) {
