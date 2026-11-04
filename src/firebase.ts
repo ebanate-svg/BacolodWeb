@@ -1,20 +1,16 @@
 import { initializeApp } from 'firebase/app'
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
+import { getToken, initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
 import {
   collection,
-  documentId,
   getCountFromServer,
   getDocs,
   getFirestore,
   limit,
   orderBy,
   query,
-  startAfter,
   where,
   type DocumentData,
   type Firestore,
-  type QueryConstraint,
-  type QueryDocumentSnapshot,
 } from 'firebase/firestore'
 import type {
   CalendarEventItem,
@@ -38,12 +34,13 @@ export const firebaseReady = Boolean(config.apiKey && config.projectId && config
 const app = firebaseReady ? initializeApp(config) : null
 const appCheckSiteKey = import.meta.env.VITE_FIREBASE_APPCHECK_SITE_KEY
 
-if (app && appCheckSiteKey) {
-  initializeAppCheck(app, {
-    provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
-    isTokenAutoRefreshEnabled: true,
-  })
-}
+const appCheck =
+  app && appCheckSiteKey
+    ? initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
+        isTokenAutoRefreshEnabled: true,
+      })
+    : null
 
 const db = app ? getFirestore(app) : null
 
@@ -88,11 +85,143 @@ const firstImageUrl = (record: DocumentData) => {
   return asText(record.photoUrl || images[0]?.url, 2000)
 }
 
-// The security rules refuse any business or job query without both of these filters.
-const approvedAndPublic = [
-  where('approvalStatus', '==', 'approved'),
-  where('visibility', '==', 'public'),
+// Business and job documents also hold private owner data, and the Firestore web SDK always
+// downloads whole documents. These reads use the REST API instead, which returns only the
+// fields listed here. Do not add a private field to these lists.
+const publicBusinessFields = [
+  'name',
+  'normalizedName',
+  'category',
+  'description',
+  'location',
+  'address',
+  'website',
+  'photoUrl',
+  'images',
+  'businessHours',
 ]
+const publicJobFields = [
+  'title',
+  'businessName',
+  'employmentType',
+  'salaryType',
+  'salaryMin',
+  'salaryMax',
+  'salaryVisible',
+  'locationText',
+  'vacancies',
+  'hiredCount',
+  'applicationInstructions',
+  'createdAt',
+]
+
+type FieldFilter = [field: string, operator: '==' | 'in' | '>=' | '<=', value: string | string[]]
+
+// The security rules refuse any business or job query without both of these filters.
+const approvedAndPublic: FieldFilter[] = [
+  ['approvalStatus', '==', 'approved'],
+  ['visibility', '==', 'public'],
+]
+
+type RestValue = {
+  stringValue?: string
+  integerValue?: string
+  doubleValue?: number
+  booleanValue?: boolean
+  timestampValue?: string
+  arrayValue?: { values?: RestValue[] }
+  mapValue?: { fields?: Record<string, RestValue> }
+}
+
+const fromRestValue = (value: RestValue): unknown => {
+  if (value.stringValue !== undefined) return value.stringValue
+  if (value.integerValue !== undefined) return Number(value.integerValue)
+  if (value.doubleValue !== undefined) return value.doubleValue
+  if (value.booleanValue !== undefined) return value.booleanValue
+  if (value.timestampValue !== undefined) {
+    const date = new Date(value.timestampValue)
+    return { toDate: () => date }
+  }
+  if (value.arrayValue) return (value.arrayValue.values ?? []).map(fromRestValue)
+  if (value.mapValue) return fromRestFields(value.mapValue.fields)
+  return null
+}
+
+const fromRestFields = (fields: Record<string, RestValue> = {}) =>
+  Object.fromEntries(
+    Object.entries(fields).map(([name, value]) => [name, fromRestValue(value)]),
+  ) as DocumentData
+
+const toRestValue = (value: string | string[]): RestValue =>
+  Array.isArray(value)
+    ? { arrayValue: { values: value.map((item) => ({ stringValue: item })) } }
+    : { stringValue: value }
+
+const restOperators = {
+  '==': 'EQUAL',
+  in: 'IN',
+  '>=': 'GREATER_THAN_OR_EQUAL',
+  '<=': 'LESS_THAN_OR_EQUAL',
+}
+
+type PublicFieldsRead = {
+  collectionId: string
+  fields: string[]
+  filters: FieldFilter[]
+  sortBy?: { field: string; direction: 'ASCENDING' | 'DESCENDING' }[]
+  startAfter?: [sortValue: string, documentId: string]
+  limit: number
+}
+
+async function readPublicFields(read: PublicFieldsRead): Promise<DocumentData[]> {
+  const documents = `projects/${config.projectId}/databases/(default)/documents`
+  const structuredQuery = {
+    select: { fields: read.fields.map((fieldPath) => ({ fieldPath })) },
+    from: [{ collectionId: read.collectionId }],
+    where: {
+      compositeFilter: {
+        op: 'AND',
+        filters: read.filters.map(([fieldPath, operator, value]) => ({
+          fieldFilter: {
+            field: { fieldPath },
+            op: restOperators[operator],
+            value: toRestValue(value),
+          },
+        })),
+      },
+    },
+    orderBy: read.sortBy?.map(({ field, direction }) => ({
+      field: { fieldPath: field },
+      direction,
+    })),
+    startAt: read.startAfter && {
+      values: [
+        { stringValue: read.startAfter[0] },
+        { referenceValue: `${documents}/${read.collectionId}/${read.startAfter[1]}` },
+      ],
+      before: false,
+    },
+    limit: read.limit,
+  }
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (appCheck) headers['X-Firebase-AppCheck'] = (await getToken(appCheck)).token
+
+  const response = await fetch(
+    `https://firestore.googleapis.com/v1/${documents}:runQuery?key=${config.apiKey}`,
+    { method: 'POST', headers, body: JSON.stringify({ structuredQuery }) },
+  )
+  if (!response.ok) throw new Error(`Firestore returned HTTP ${response.status}.`)
+
+  const rows = (await response.json()) as {
+    document?: { name: string; fields?: Record<string, RestValue> }
+  }[]
+  return rows.flatMap(({ document }) =>
+    document
+      ? [{ ...fromRestFields(document.fields), id: document.name.split('/').pop() ?? '' }]
+      : [],
+  )
+}
 
 async function loadPublicCollection<T>(
   requestName: string,
@@ -173,23 +302,23 @@ export const loadTopDestinations = (fallback: DestinationItem[]) =>
 export const loadTopRestaurants = (fallback: RestaurantItem[]) =>
   loadPublicCollection<RestaurantItem>(
     'getTopRestaurants',
-    async (database) => {
-      // No orderBy, so this works with the existing indexes.
-      const snapshot = await getDocs(
-        query(
-          collection(database, 'local_businesses'),
+    async () => {
+      // No sort order, so this works with the existing indexes.
+      const businesses = await readPublicFields({
+        collectionId: 'local_businesses',
+        fields: publicBusinessFields,
+        filters: [
           ...approvedAndPublic,
-          where('category', 'in', ['restaurant', 'cafe', 'bakery', 'bar']),
-          limit(20),
-        ),
-      )
-      return snapshot.docs
-        .map((document) => {
-          const business = document.data()
+          ['category', 'in', ['restaurant', 'cafe', 'bakery', 'bar']],
+        ],
+        limit: 20,
+      })
+      return businesses
+        .map((business) => {
           const open = asText(business.businessHours?.open, 30)
           const close = asText(business.businessHours?.close, 30)
           return {
-            id: document.id,
+            id: business.id,
             name: asText(business.name, 160),
             type: capitalize(asText(business.category, 100)) || 'Restaurant',
             image: firstImageUrl(business),
@@ -229,23 +358,21 @@ const formatSalary = (job: DocumentData) => {
 let jobsRequest: Promise<JobItem[]> | null = null
 
 // The jobs page asks for jobs and departments at the same moment; both share one read.
-const readPublicJobs = (database: Firestore) => {
-  jobsRequest ??= getDocs(
-    query(
-      collection(database, 'job_listings'),
-      ...approvedAndPublic,
-      orderBy('createdAt', 'desc'),
-      limit(20),
-    ),
-  )
-    .then((snapshot) =>
-      snapshot.docs
-        .map((document) => {
-          const job = document.data()
+const readPublicJobs = () => {
+  jobsRequest ??= readPublicFields({
+    collectionId: 'job_listings',
+    fields: publicJobFields,
+    filters: approvedAndPublic,
+    sortBy: [{ field: 'createdAt', direction: 'DESCENDING' }],
+    limit: 20,
+  })
+    .then((jobs) =>
+      jobs
+        .map((job) => {
           const vacancies = typeof job.vacancies === 'number' ? job.vacancies : 1
           const hired = typeof job.hiredCount === 'number' ? job.hiredCount : 0
           return {
-            id: document.id,
+            id: job.id,
             title: asText(job.title, 180),
             department: asText(job.businessName, 160) || 'Local Business',
             salary: formatSalary(job),
@@ -272,8 +399,8 @@ export const loadLatestJobs = (fallback: JobItem[]) =>
 export const loadJobDepartments = (fallback: string[]) =>
   loadPublicCollection(
     'getJobDepartments',
-    async (database) => {
-      const jobs = await readPublicJobs(database)
+    async () => {
+      const jobs = await readPublicJobs()
       return [...new Set(jobs.map((job) => job.department))].sort((a, b) => a.localeCompare(b))
     },
     fallback,
@@ -348,10 +475,9 @@ const businessCategories = [
   'services',
 ].map(capitalize)
 
-const toLocalBusiness = (document: QueryDocumentSnapshot): LocalBusinessItem => {
-  const business = document.data()
+const toLocalBusiness = (business: DocumentData): LocalBusinessItem => {
   return {
-    id: document.id,
+    id: business.id,
     name: asText(business.name, 160),
     category: capitalize(asText(business.category, 160)) || 'Local Business',
     image: firstImageUrl(business),
@@ -365,65 +491,67 @@ async function readBusinessPage(
   database: Firestore,
   params: LocalBusinessParams,
 ): Promise<Omit<LocalBusinessPage, 'isLive'>> {
-  const businesses = collection(database, 'local_businesses')
   const search = params.query?.trim().toLowerCase() || ''
   const category =
     params.category && params.category !== 'All Categories' ? params.category.toLowerCase() : ''
   // Stored categories are not all lowercase yet, for example "cafe" and "Restaurant".
   const categoryValues = [category, capitalize(category)]
   const sortField = search ? 'normalizedName' : 'name'
-  const filters: QueryConstraint[] = [...approvedAndPublic]
+  const filters: FieldFilter[] = [...approvedAndPublic]
   if (search) {
-    filters.push(
-      where('normalizedName', '>=', search),
-      where('normalizedName', '<=', `${search}\uf8ff`),
-    )
+    filters.push(['normalizedName', '>=', search], ['normalizedName', '<=', `${search}\uf8ff`])
   } else if (category) {
-    filters.push(where('category', 'in', categoryValues))
+    filters.push(['category', 'in', categoryValues])
   }
+  const businesses = { collectionId: 'local_businesses', fields: publicBusinessFields, filters }
+  const sortBy = [
+    { field: sortField, direction: 'ASCENDING' as const },
+    { field: '__name__', direction: 'ASCENDING' as const },
+  ]
 
   // Search plus category has no index, so the category is filtered here on the search results.
   if (search && category) {
-    const snapshot = await getDocs(query(businesses, ...filters, orderBy(sortField), limit(200)))
-    const matches = snapshot.docs.filter((document) =>
-      categoryValues.includes(document.get('category')),
+    const results = await readPublicFields({ ...businesses, sortBy, limit: 200 })
+    const matches = results.filter((business) =>
+      categoryValues.includes(asText(business.category, 160)),
     )
     const cursorId = params.cursor ? (JSON.parse(params.cursor) as string[])[1] : ''
-    const start = matches.findIndex((document) => document.id === cursorId) + 1
+    const start = matches.findIndex((business) => business.id === cursorId) + 1
     const page = matches.slice(start, start + businessPageSize)
     const last = page.at(-1)
     return {
       items: page.map(toLocalBusiness),
       nextCursor:
         last && start + businessPageSize < matches.length
-          ? JSON.stringify([last.get(sortField), last.id])
+          ? JSON.stringify([last[sortField], last.id])
           : null,
       total: matches.length,
       categories: businessCategories,
     }
   }
 
-  const ordered = query(businesses, ...filters, orderBy(sortField), orderBy(documentId()))
-  const pageQuery = params.cursor
-    ? query(
-        ordered,
-        startAfter(...(JSON.parse(params.cursor) as string[])),
-        limit(businessPageSize + 1),
-      )
-    : query(ordered, limit(businessPageSize + 1))
-  const [snapshot, count] = await Promise.all([
-    getDocs(pageQuery),
-    getCountFromServer(query(businesses, ...filters)),
+  // The count returns only a number, so the SDK is safe here.
+  const [results, count] = await Promise.all([
+    readPublicFields({
+      ...businesses,
+      sortBy,
+      startAfter: params.cursor ? (JSON.parse(params.cursor) as [string, string]) : undefined,
+      limit: businessPageSize + 1,
+    }),
+    getCountFromServer(
+      query(
+        collection(database, 'local_businesses'),
+        ...filters.map(([field, operator, value]) => where(field, operator, value)),
+      ),
+    ),
   ])
-  const page = snapshot.docs.slice(0, businessPageSize)
+  const page = results.slice(0, businessPageSize)
   const last = page.at(-1)
   return {
     items: page.map(toLocalBusiness),
     // The cursor stays a string (sort value + id) because the page keeps a cursor history.
     nextCursor:
-      last && snapshot.size > businessPageSize
-        ? JSON.stringify([last.get(sortField), last.id])
-        : null,
+      last && results.length > businessPageSize ? JSON.stringify([last[sortField], last.id]) : null,
     total: count.data().count,
     categories: businessCategories,
   }
