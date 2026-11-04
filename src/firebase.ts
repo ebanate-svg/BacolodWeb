@@ -18,7 +18,6 @@ import type {
   JobItem,
   LocalBusinessItem,
   NewsItem,
-  RestaurantItem,
 } from './data'
 
 const config = {
@@ -295,40 +294,6 @@ export const loadTopDestinations = (fallback: DestinationItem[]) =>
         .sort((a, b) => b.sortValue - a.sortValue)
         .slice(0, 7)
         .map(({ sortValue, ...item }) => item)
-    },
-    fallback,
-  )
-
-export const loadTopRestaurants = (fallback: RestaurantItem[]) =>
-  loadPublicCollection<RestaurantItem>(
-    'getTopRestaurants',
-    async () => {
-      // No sort order, so this works with the existing indexes.
-      const businesses = await readPublicFields({
-        collectionId: 'local_businesses',
-        fields: publicBusinessFields,
-        filters: [
-          ...approvedAndPublic,
-          ['category', 'in', ['restaurant', 'cafe', 'bakery', 'bar']],
-        ],
-        limit: 20,
-      })
-      return businesses
-        .map((business) => {
-          const open = asText(business.businessHours?.open, 30)
-          const close = asText(business.businessHours?.close, 30)
-          return {
-            id: business.id,
-            name: asText(business.name, 160),
-            type: capitalize(asText(business.category, 100)) || 'Restaurant',
-            image: firstImageUrl(business),
-            location: asText(business.location || business.address, 240) || 'Bacolod City',
-            hours: open && close ? `${open} – ${close}` : 'Hours not listed',
-            url: asWebUrl(business.website),
-          }
-        })
-        .filter((item) => item.name && item.image)
-        .slice(0, 5)
     },
     fallback,
   )

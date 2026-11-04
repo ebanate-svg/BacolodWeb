@@ -1,14 +1,9 @@
-import { ArrowRight, CalendarDays, Flower2, Heart, Sparkles, Star } from 'lucide-react'
+import { ArrowRight, CalendarDays, Flower2, Heart, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Events from '../components/Events'
 import Title from '../components/Title'
-import {
-  destinations as fallbackDestinations,
-  restaurants as fallbackRestaurants,
-  type DestinationItem,
-  type RestaurantItem,
-} from '../data'
-import { loadTopDestinations, loadTopRestaurants } from '../firebase'
+import { type DestinationItem } from '../data'
+import { loadTopDestinations } from '../firebase'
 import { asset } from '../utils/assets'
 
 const tourismSlides = [
@@ -19,21 +14,14 @@ const tourismSlides = [
 
 function TourismPage() {
   const [tourismSlide, setTourismSlide] = useState(0)
-  const [destinations, setDestinations] = useState<DestinationItem[]>(fallbackDestinations)
-  const [restaurants, setRestaurants] = useState<RestaurantItem[]>(fallbackRestaurants)
+  const [destinations, setDestinations] = useState<DestinationItem[]>([])
 
   useEffect(() => {
     let active = true
 
     async function fetchTourismContent() {
-      const [destinationResult, restaurantResult] = await Promise.all([
-        loadTopDestinations(fallbackDestinations),
-        loadTopRestaurants(fallbackRestaurants),
-      ])
-      if (active) {
-        setDestinations(destinationResult.items.slice(0, 7))
-        setRestaurants(restaurantResult.items.slice(0, 5))
-      }
+      const destinationResult = await loadTopDestinations([])
+      if (active) setDestinations(destinationResult.items.slice(0, 7))
     }
 
     void fetchTourismContent()
@@ -125,36 +113,6 @@ function TourismPage() {
         <button className="button">
           View all destinations <ArrowRight aria-hidden="true" />
         </button>
-      </section>
-      <section id="dining" className="dining-section page-width">
-        <Title
-          title="Dining in Bacolod"
-          description="Taste iconic chicken inasal, local comfort food, and celebrated desserts."
-        />
-        <div className="restaurant-grid grid">
-          {restaurants.map(({ id, name, type, image, location, hours, rating }) => (
-            <article key={id}>
-              <img src={image} alt={`Dining at ${name}`} loading="lazy" />
-              <div>
-                {rating ? (
-                  <span className="rating-stars" aria-label="Rated five stars">
-                    {Array.from(
-                      { length: Math.max(1, Math.min(5, Math.round(rating))) },
-                      (_, index) => (
-                        <Star key={index} aria-hidden="true" fill="currentColor" />
-                      ),
-                    )}
-                  </span>
-                ) : null}
-                <h3>{name}</h3>
-                <p>{type}</p>
-                <small>
-                  {hours} · {location}
-                </small>
-              </div>
-            </article>
-          ))}
-        </div>
       </section>
       <Events />
     </div>

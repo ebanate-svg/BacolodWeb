@@ -2,28 +2,26 @@ import { ArrowLeft, ArrowRight, Heart, MapPin, Search, Sparkles, Star } from 'lu
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Title from '../components/Title'
-import { businesses, localBusinesses as fallbackBusinesses, type LocalBusinessItem } from '../data'
+import { businesses, type LocalBusinessItem } from '../data'
 import { loadLocalBusinesses } from '../firebase'
 import { asset } from '../utils/assets'
 
 function BusinessPage() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All Categories')
-  const [shown, setShown] = useState<LocalBusinessItem[]>(fallbackBusinesses.slice(0, 9))
-  const [categories, setCategories] = useState<string[]>(() =>
-    [...new Set(fallbackBusinesses.map((business) => business.category))].sort(),
-  )
-  const [total, setTotal] = useState(fallbackBusinesses.length)
+  const [shown, setShown] = useState<LocalBusinessItem[]>([])
+  const [categories, setCategories] = useState<string[]>([])
+  const [total, setTotal] = useState(0)
   const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [cursorHistory, setCursorHistory] = useState<(string | null)[]>([null])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const cursor = cursorHistory.at(-1) || null
 
   useEffect(() => {
     let active = true
     setLoading(true)
     const timer = window.setTimeout(async () => {
-      const result = await loadLocalBusinesses({ cursor, query, category }, fallbackBusinesses)
+      const result = await loadLocalBusinesses({ cursor, query, category }, [])
       if (active) {
         setShown(result.items)
         setCategories(result.categories)
@@ -122,7 +120,7 @@ function BusinessPage() {
           )}
         </div>
 
-        {shown.length > 0 ? (
+        {loading && shown.length === 0 ? null : shown.length > 0 ? (
           <div className="business-grid local-business-grid pb-4">
             {shown.map((business, index) => (
               <Link to="/local-business/21-restaurant" key={business.id}>
