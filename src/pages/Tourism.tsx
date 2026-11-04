@@ -136,14 +136,16 @@ function TourismPage() {
             <article key={id}>
               <img src={image} alt={`Dining at ${name}`} loading="lazy" />
               <div>
-                <span className="rating-stars" aria-label="Rated five stars">
-                  {Array.from(
-                    { length: Math.max(1, Math.min(5, Math.round(rating))) },
-                    (_, index) => (
-                      <Star key={index} aria-hidden="true" fill="currentColor" />
-                    ),
-                  )}
-                </span>
+                {rating ? (
+                  <span className="rating-stars" aria-label="Rated five stars">
+                    {Array.from(
+                      { length: Math.max(1, Math.min(5, Math.round(rating))) },
+                      (_, index) => (
+                        <Star key={index} aria-hidden="true" fill="currentColor" />
+                      ),
+                    )}
+                  </span>
+                ) : null}
                 <h3>{name}</h3>
                 <p>{type}</p>
                 <small>

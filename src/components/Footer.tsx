@@ -23,12 +23,15 @@ function Footer() {
       </section>
       <footer className="font-sans" id="contact">
         <div className="footer-grid page-width grid">
-          <img className="object-contain" src={asset('bacolodLogo.png')} alt="Bacolod City" />
+          <img
+            className="object-contain"
+            src={asset('app_logo_with_text.png')}
+            alt="Bacolod City"
+          />
           <div className="flex flex-col">
             <h3>Services</h3>
             <Link to="/services">Local Government Service</Link>
             <Link to="/civic">Community Notices & Events</Link>
-            <Link to="/waste">Waste Management</Link>
             <Link to="/jobs">Local Business & Job Listings</Link>
           </div>
           <div className="flex flex-col">

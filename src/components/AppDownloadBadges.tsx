@@ -1,3 +1,5 @@
+import { APP_STORE_URL, GOOGLE_PLAY_URL } from '../data'
+
 export function GooglePlayIcon() {
   return (
     <svg className="google-play-icon block shrink-0" viewBox="0 0 32 34" aria-hidden="true">
@@ -25,7 +27,7 @@ function AppDownloadBadges({ className = 'app-downloads' }: { className?: string
     >
       <a
         className="store-badge inline-flex items-center"
-        href="https://play.google.com/store/apps/details?id=co.fortistech.bacolodgapp"
+        href={GOOGLE_PLAY_URL}
         target="_blank"
         rel="noreferrer"
         aria-label="Get it on Google Play"
@@ -38,7 +40,9 @@ function AppDownloadBadges({ className = 'app-downloads' }: { className?: string
       </a>
       <a
         className="store-badge inline-flex items-center"
-        href="#app-store"
+        href={APP_STORE_URL}
+        target="_blank"
+        rel="noreferrer"
         aria-label="Download on the App Store"
       >
         <AppleIcon />

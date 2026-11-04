@@ -6,8 +6,6 @@ import { businesses, localBusinesses as fallbackBusinesses, type LocalBusinessIt
 import { loadLocalBusinesses } from '../firebase'
 import { asset } from '../utils/assets'
 
-const G_APP_URL = 'https://play.google.com/store/apps/details?id=co.fortistech.bacolodgapp'
-
 function BusinessPage() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All Categories')
@@ -265,9 +263,9 @@ function BusinessDetail() {
             <p>11:00 AM – 10:00 PM</p>
             <p>21st Street, Bacolod City</p>
             <p>(034) 434-4091</p>
-            <a className="button" href={G_APP_URL} target="_blank" rel="noopener noreferrer">
+            <Link className="button" to="/get-app">
               Leave feedback
-            </a>
+            </Link>
           </aside>
         </div>
         <Title title="Popular dishes" />

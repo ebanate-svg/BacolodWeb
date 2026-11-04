@@ -30,7 +30,7 @@ export type RestaurantItem = {
   image: string
   location: string
   hours: string
-  rating: number
+  rating?: number
   url?: string
 }
 export type JobItem = {
@@ -44,6 +44,7 @@ export type JobItem = {
   postedAt?: string
   deadline?: string
   applyUrl?: string
+  applicationInstructions?: string
 }
 export type CalendarEventItem = {
   id: string
@@ -68,16 +69,11 @@ export type LocalBusinessItem = {
   rating?: number
   reviewCount?: number
 }
-export type BidItem = {
-  id: string
-  title: string
-  reference: string
-  category: string
-  postedAt: string
-  documentUrl?: string
-  sourceUrl?: string
-}
 const asset = (name: string) => `${import.meta.env.BASE_URL}images/${name}`
+
+export const GOOGLE_PLAY_URL =
+  'https://play.google.com/store/apps/details?id=co.fortistech.bacolodgapp&hl=en'
+export const APP_STORE_URL = 'https://apps.apple.com/us/app/bacolod-city-g-app/id6823100596'
 
 export const services: Service[] = [
   {
@@ -92,7 +88,7 @@ export const services: Service[] = [
     icon: 'technology',
     title: 'MITCS Services',
     description: 'Access Bacolod City’s official digital services through the Bacolod G-App.',
-    href: 'https://play.google.com/store/apps/details?id=co.fortistech.bacolodgapp',
+    href: '/get-app',
     external: true,
   },
   {
@@ -100,7 +96,7 @@ export const services: Service[] = [
     icon: 'tracker',
     title: 'Case Status Tracker',
     description: 'Track the progress and current status of submitted cases and requests.',
-    href: 'https://play.google.com/store/apps/details?id=co.fortistech.bacolodgapp',
+    href: '/get-app',
     external: true,
   },
   {
@@ -108,7 +104,7 @@ export const services: Service[] = [
     icon: 'senior',
     title: 'Senior Citizen Portal',
     description: 'Access digital information and services created for Bacolod’s senior citizens.',
-    href: 'https://play.google.com/store/apps/details?id=co.fortistech.bacolodgapp',
+    href: '/get-app',
     external: true,
   },
 ]
@@ -159,37 +155,6 @@ export const jobs: JobItem[] = [
   location: 'Bacolod City',
   openings: 1,
 }))
-
-export const bidItems: BidItem[] = [
-  {
-    id: 'bid-1',
-    title: 'Road Rehabilitation Program — Barangay Mandalagan',
-    reference: 'BAC-2026-001',
-    category: 'Infrastructure',
-    postedAt: '2026-10-28T00:00:00+08:00',
-  },
-  {
-    id: 'bid-2',
-    title: 'Supply of Medical Equipment for Health Centers',
-    reference: 'BAC-2026-002',
-    category: 'Goods',
-    postedAt: '2026-11-04T00:00:00+08:00',
-  },
-  {
-    id: 'bid-3',
-    title: 'Public Market Modernization Consultancy',
-    reference: 'BAC-2026-003',
-    category: 'Consulting',
-    postedAt: '2026-11-12T00:00:00+08:00',
-  },
-  {
-    id: 'bid-4',
-    title: 'Procurement of Waste Collection Vehicles',
-    reference: 'BAC-2026-004',
-    category: 'Goods',
-    postedAt: '2026-11-18T00:00:00+08:00',
-  },
-]
 
 export const businesses = [
   ['21 Restaurant', 'Filipino · Fine Dining', 'businessDetail.jpg'],

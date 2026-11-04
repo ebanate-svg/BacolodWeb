@@ -104,7 +104,7 @@ function JobsPage() {
           ))}
         </div>
         <div className="job-list">
-          {shown.map(({ id, title, department, salary, type, location, applyUrl }) => (
+          {shown.map(({ id, title, department, salary, type, location }) => (
             <article key={id}>
               <div className="job-details">
                 <span>{type}</span>
@@ -114,20 +114,9 @@ function JobsPage() {
                   <MapPin aria-hidden="true" /> {location} · {salary}
                 </small>
               </div>
-              {applyUrl?.startsWith('http') ? (
-                <a
-                  className="button button-outline"
-                  href={applyUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Apply Now
-                </a>
-              ) : (
-                <Link className="button button-outline" to={applyUrl || '/services'}>
-                  Apply Now
-                </Link>
-              )}
+              <Link className="button button-outline" to="/get-app">
+                Apply Now
+              </Link>
             </article>
           ))}
           {shown.length === 0 && (

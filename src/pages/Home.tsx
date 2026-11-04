@@ -17,7 +17,7 @@ import { AppleIcon, GooglePlayIcon } from '../components/AppDownloadBadges'
 import BenefitIcon, { type BenefitIconName } from '../components/BenefitIcon'
 import DeferredSection from '../components/DeferredSection'
 import Title from '../components/Title'
-import { news as fallbackNews, type NewsItem } from '../data'
+import { APP_STORE_URL, GOOGLE_PLAY_URL, news as fallbackNews, type NewsItem } from '../data'
 import { loadLatestNews } from '../firebase'
 import { asset, formatNewsDate } from '../utils/assets'
 
@@ -163,11 +163,7 @@ function Home() {
                 <b>Access the Web</b>
               </span>
             </Link>
-            <a
-              href="https://play.google.com/store/apps/details?id=co.fortistech.bacolodgapp"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href={GOOGLE_PLAY_URL} target="_blank" rel="noreferrer">
               <i aria-hidden="true">
                 <GooglePlayIcon />
               </i>
@@ -176,7 +172,7 @@ function Home() {
                 <b>Get it on Google Play</b>
               </span>
             </a>
-            <a href="#app-store">
+            <a href={APP_STORE_URL} target="_blank" rel="noreferrer">
               <i className="apple-access-icon" aria-hidden="true">
                 <AppleIcon />
               </i>
