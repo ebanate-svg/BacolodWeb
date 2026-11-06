@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { calendarEvents as fallbackEvents, type CalendarEventItem } from '../data'
+import { type CalendarEventItem } from '../data'
 import { loadCalendarEvents } from '../firebase'
 import Title from './Title'
 
@@ -12,8 +12,8 @@ const formatTime = (date: Date) =>
   date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 
 function Events() {
-  const [events, setEvents] = useState<CalendarEventItem[]>(fallbackEvents)
-  const [calendarDate, setCalendarDate] = useState(() => new Date(fallbackEvents[0].startAt))
+  const [events, setEvents] = useState<CalendarEventItem[]>([])
+  const [calendarDate, setCalendarDate] = useState(() => new Date())
   const [view, setView] = useState('Week')
   const parsedEvents = useMemo(
     () =>
@@ -40,7 +40,7 @@ function Events() {
   useEffect(() => {
     let active = true
     async function fetchEvents() {
-      const result = await loadCalendarEvents(fallbackEvents)
+      const result = await loadCalendarEvents([])
       if (active) {
         setEvents(result.items)
         const nextEvent = result.items.find(

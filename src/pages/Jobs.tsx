@@ -1,25 +1,22 @@
 import { MapPin, Search, Sparkles } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { jobs as fallbackJobs, type JobItem } from '../data'
+import { type JobItem } from '../data'
 import { loadJobDepartments, loadLatestJobs } from '../firebase'
 
 function JobsPage() {
   const [query, setQuery] = useState('')
-  const [jobs, setJobs] = useState<JobItem[]>(fallbackJobs)
-  const [departments, setDepartments] = useState<string[]>(() =>
-    Array.from(new Set(fallbackJobs.map((job) => job.department))),
-  )
+  const [jobs, setJobs] = useState<JobItem[]>([])
+  const [departments, setDepartments] = useState<string[]>([])
   const [activeDepartment, setActiveDepartment] = useState('All Jobs')
 
   useEffect(() => {
     let active = true
-    const fallbackDepartments = Array.from(new Set(fallbackJobs.map((job) => job.department)))
 
     async function fetchJobs() {
       const [jobResult, departmentResult] = await Promise.all([
-        loadLatestJobs(fallbackJobs),
-        loadJobDepartments(fallbackDepartments),
+        loadLatestJobs([]),
+        loadJobDepartments([]),
       ])
       if (active) {
         setJobs(jobResult.items.slice(0, 9))
@@ -92,42 +89,33 @@ function JobsPage() {
           </div>
           <p>{shown.length} positions shown</p>
         </div>
-        <div className="filter-pills jobs-filters">
-          {['All Jobs', ...departments].map((department) => (
-            <button
-              className={activeDepartment === department ? 'active' : ''}
-              key={department}
-              onClick={() => setActiveDepartment(department)}
-            >
-              {department}
-            </button>
-          ))}
-        </div>
+        {departments.length > 1 && (
+          <div className="filter-pills jobs-filters">
+            {['All Jobs', ...departments].map((department) => (
+              <button
+                className={activeDepartment === department ? 'active' : ''}
+                key={department}
+                onClick={() => setActiveDepartment(department)}
+              >
+                {department}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="job-list">
-          {shown.map(({ id, title, department, salary, type, location, applyUrl }) => (
+          {shown.map(({ id, title, department, salary, type, location }) => (
             <article key={id}>
               <div className="job-details">
                 <span>{type}</span>
                 <h3>{title}</h3>
-                <p>{department}</p>
+                {departments.length > 1 && <p>{department}</p>}
                 <small>
                   <MapPin aria-hidden="true" /> {location} · {salary}
                 </small>
               </div>
-              {applyUrl?.startsWith('http') ? (
-                <a
-                  className="button button-outline"
-                  href={applyUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Apply Now
-                </a>
-              ) : (
-                <Link className="button button-outline" to={applyUrl || '/services'}>
-                  Apply Now
-                </Link>
-              )}
+              <Link className="button button-outline" to="/get-app">
+                Apply Now
+              </Link>
             </article>
           ))}
           {shown.length === 0 && (
