@@ -195,20 +195,33 @@ function Home() {
         />
         <div className="benefit-grid page-width">
           {[
-            ['convenience', 'Enhanced Convenience'],
-            ['process', 'Streamlined Processes'],
-            ['accessibility', 'Expanded Accessibility'],
-            ['updates', 'Real-Time Information'],
-          ].map(([icon, title]) => (
+            [
+              'convenience',
+              'Enhanced Convenience',
+              'Providing residents with a user-friendly digital experience through our web and mobile apps—offering seamless access to government services, documents, and updates.',
+            ],
+            [
+              'process',
+              'Streamlined Processes',
+              'Simplifying citizen transactions such as online payments, service requests, and document access—reducing paperwork and improving efficiency across both app platforms.',
+            ],
+            [
+              'accessibility',
+              'Expanded Accessibility',
+              'With the Bacolod eGov web portal and mobile app, citizens can connect with the local government 24/7, whether at home or on the go.',
+            ],
+            [
+              'updates',
+              'Real-Time Information',
+              'Stay informed with instant updates, alerts, and announcements delivered directly through the eGov app and portal.',
+            ],
+          ].map(([icon, title, description]) => (
             <article key={title}>
               <i>
                 <BenefitIcon name={icon as BenefitIconName} />
               </i>
               <h3>{title}</h3>
-              <p>
-                Access city services with a user-friendly digital experience available whenever and
-                wherever you need it.
-              </p>
+              <p>{description}</p>
             </article>
           ))}
         </div>
