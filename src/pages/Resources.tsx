@@ -80,7 +80,7 @@ function CivicPage() {
                 <span className="eyebrow">{step}</span>
                 <h3>{title}</h3>
                 <p>{copy}</p>
-                <Link className="button button-outline" to="/services">
+                <Link className="button button-outline" to="/get-app">
                   Participate
                 </Link>
               </div>

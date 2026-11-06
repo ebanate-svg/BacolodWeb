@@ -9,9 +9,7 @@ function Header() {
   const servicesDropdownRef = useRef<HTMLSpanElement>(null)
   const servicesButtonRef = useRef<HTMLButtonElement>(null)
   const servicesActive =
-    location.pathname.startsWith('/services') ||
-    location.pathname.startsWith('/waste') ||
-    location.pathname.startsWith('/local-business')
+    location.pathname.startsWith('/services') || location.pathname.startsWith('/local-business')
 
   useEffect(() => {
     setOpen(false)
@@ -90,7 +88,6 @@ function Header() {
             >
               <Link to="/services">Online Services</Link>
               <Link to="/services/bplo">Business Permits</Link>
-              {/* <Link to="/waste">Waste Management</Link> */}
               <Link to="/local-business">Local Business</Link>
             </span>
           </span>
