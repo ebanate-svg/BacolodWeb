@@ -11,7 +11,9 @@
     "check:firebase-config": "node scripts/check-firebase-config.mjs",
     "preview": "vite preview",
     "firebase:emulators": "firebase emulators:start",
-    "firebase:deploy": "firebase deploy"
+    "firebase:deploy": "firebase deploy",
+    "deploy:dev": "npm run build && firebase deploy --only hosting:egov-web --project dev",
+    "deploy:prod": "npm run build && firebase deploy --only hosting:egov-web --project prod"
   },
   "dependencies": {
     "firebase": "^12.4.0",

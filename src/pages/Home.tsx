@@ -355,11 +355,19 @@ function Home() {
                 key={item.id}
                 role="button"
                 tabIndex={0}
-                onClick={() => setSelectedNews(item)}
+                onClick={() =>
+                  setSelectedNews({
+                    ...item,
+                    image: item.image || asset(`news${index + 1}.png`),
+                  })
+                }
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault()
-                    setSelectedNews(item)
+                    setSelectedNews({
+                      ...item,
+                      image: item.image || asset(`news${index + 1}.png`),
+                    })
                   }
                 }}
                 aria-label={`Read full story: ${item.title}`}

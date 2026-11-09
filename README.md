@@ -89,30 +89,27 @@ The production functions use the `asia-southeast1` region and require Firebase A
 
 ## Available commands
 
-| Command                         | Purpose                                                 |
-| ------------------------------- | ------------------------------------------------------- |
-| `npm run dev`                   | Start the Vite development server                       |
-| `npm run build`                 | Create the production build in `dist`                   |
-| `npm run preview`               | Preview the production build locally                    |
-| `npm run format`                | Format the project with Prettier                        |
-| `npm run format:check`          | Check formatting without changing files                 |
-| `npm run check:firebase-config` | Validate the production Firebase variables              |
-| `npm run firebase:emulators`    | Start the configured Firebase emulators                 |
-| `npm run firebase:deploy`       | Deploy Hosting, Functions, Firestore rules, and indexes |
+| Command                         | Purpose                                                                 |
+| ------------------------------- | ----------------------------------------------------------------------- |
+| `npm run dev`                   | Start the Vite development server                                       |
+| `npm run build`                 | Create the production build in `dist`                                   |
+| `npm run preview`               | Preview the production build locally                                    |
+| `npm run format`                | Format the project with Prettier                                        |
+| `npm run format:check`          | Check formatting without changing files                                 |
+| `npm run check:firebase-config` | Validate the production Firebase variables                              |
+| `npm run firebase:emulators`    | Start the configured Firebase emulators                                 |
+| `npm run firebase:deploy`       | Deploy every configured Firebase resource; restricted to backend owners |
 
-## Firebase setup
+## Firebase deployment
 
-1. Copy `.firebaserc.example` to `.firebaserc` if a local Firebase project mapping is not already present.
-2. Set the project ID to the intended Firebase project.
-3. Add the deployed domain and local development domains to the reCAPTCHA/App Check configuration.
-4. Build and deploy:
+Follow [FIREBASE_HOSTING_DEPLOYMENT.md](FIREBASE_HOSTING_DEPLOYMENT.md) for first-time setup,
+preview channels, development deployment, production deployment, and rollback.
 
-   ```bash
-   npm run build
-   npm run firebase:deploy
-   ```
+Frontend releases must use the dedicated `egov-web` Hosting target. Do not run an unrestricted
+`firebase deploy` because this repository also contains Functions and Firestore configuration.
 
-Firebase Hosting serves the `dist` directory and rewrites unknown routes to `index.html` for client-side routing.
+Firebase Hosting serves the `dist` directory and rewrites unknown routes to `index.html` for
+client-side routing.
 
 ## Project structure
 
