@@ -1,8 +1,9 @@
 import { ArrowRight, CalendarDays, Flower2, Heart, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Events from '../components/Events'
 import Title from '../components/Title'
-import { type DestinationItem } from '../data'
+import { destinations as fallbackDestinations, type DestinationItem } from '../data'
 import { loadTopDestinations } from '../firebase'
 import { asset } from '../utils/assets'
 
@@ -14,13 +15,13 @@ const tourismSlides = [
 
 function TourismPage() {
   const [tourismSlide, setTourismSlide] = useState(0)
-  const [destinations, setDestinations] = useState<DestinationItem[]>([])
+  const [destinations, setDestinations] = useState<DestinationItem[]>(fallbackDestinations)
 
   useEffect(() => {
     let active = true
 
     async function fetchTourismContent() {
-      const destinationResult = await loadTopDestinations([])
+      const destinationResult = await loadTopDestinations(fallbackDestinations)
       if (active) setDestinations(destinationResult.items.slice(0, 7))
     }
 
@@ -72,9 +73,9 @@ function TourismPage() {
             <a className="button" href="#destinations">
               Explore Destinations
             </a>
-            <a className="button button-light" href="#dining">
+            <Link className="button button-light" to="/local-business?category=Food%20%26%20Dining">
               Discover Local Flavors
-            </a>
+            </Link>
           </div>
           <div className="tourism-highlights" aria-label="Bacolod tourism highlights">
             <span>
@@ -102,17 +103,23 @@ function TourismPage() {
         <div className="destination-grid grid">
           {destinations.map(({ id, image, title, type }) => (
             <article key={id}>
-              <img src={image} alt={title} loading="lazy" />
-              <div>
-                <span>{type}</span>
-                <h3>{title}</h3>
-              </div>
+              <Link
+                className="destination-card-link"
+                to="/get-app"
+                aria-label={`${title} — get the app`}
+              >
+                <img src={image} alt={title} loading="lazy" />
+                <div>
+                  <span>{type}</span>
+                  <h3>{title}</h3>
+                </div>
+              </Link>
             </article>
           ))}
         </div>
-        <button className="button">
+        <Link className="button" to="/tourism/destinations">
           View all destinations <ArrowRight aria-hidden="true" />
-        </button>
+        </Link>
       </section>
       <Events />
     </div>

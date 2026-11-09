@@ -1,4 +1,4 @@
-import { Camera, Globe2, Network } from 'lucide-react'
+import { Globe2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { asset } from '../utils/assets'
 import AppDownloadBadges from './AppDownloadBadges'
@@ -30,9 +30,11 @@ function Footer() {
           />
           <div className="flex flex-col">
             <h3>Services</h3>
-            <Link to="/services">Local Government Service</Link>
-            <Link to="/civic">Community Notices & Events</Link>
-            <Link to="/jobs">Local Business & Job Listings</Link>
+            <Link to="/services">Local Government Services</Link>
+            <Link to="/#news">Latest News and Announcements</Link>
+            <Link to="/tourism#upcoming-events">Upcoming Events</Link>
+            <Link to="/local-business">Local Businesses</Link>
+            <Link to="/jobs">Job Listings</Link>
           </div>
           <div className="flex flex-col">
             <h3>Explore</h3>
@@ -43,8 +45,8 @@ function Footer() {
           <div className="flex flex-col">
             <h3>Legal</h3>
             <Link to="/contact">Contact the City</Link>
-            <a href="#terms">Terms and Conditions</a>
-            <a href="#privacy">Privacy Policy</a>
+            <Link to="/terms">Terms and Conditions</Link>
+            <Link to="/privacy">Privacy Policy</Link>
           </div>
         </div>
         <div className="footer-bottom page-width flex items-center justify-between">
@@ -54,14 +56,13 @@ function Footer() {
             <small>ALL RIGHTS RESERVED</small>
           </span>
           <span className="footer-socials flex items-center" aria-label="Bacolod City social media">
-            <a href="#facebook" aria-label="Facebook">
+            <a
+              href="https://www.facebook.com/BacolodCityCommunicationsOfficePIO"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Bacolod City Communications Office on Facebook"
+            >
               <Globe2 aria-hidden="true" />
-            </a>
-            <a href="#instagram" aria-label="Instagram">
-              <Camera aria-hidden="true" />
-            </a>
-            <a href="#linkedin" aria-label="LinkedIn">
-              <Network aria-hidden="true" />
             </a>
           </span>
         </div>

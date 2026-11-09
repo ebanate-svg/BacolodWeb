@@ -10,6 +10,9 @@ const sameCalendarDate = (left: Date, right: Date) =>
   left.getDate() === right.getDate()
 const formatTime = (date: Date) =>
   date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+const monthNames = Array.from({ length: 12 }, (_, month) =>
+  new Date(2000, month, 1).toLocaleDateString('en-US', { month: 'long' }),
+)
 
 function Events() {
   const [events, setEvents] = useState<CalendarEventItem[]>([])
@@ -43,12 +46,6 @@ function Events() {
       const result = await loadCalendarEvents([])
       if (active) {
         setEvents(result.items)
-        const nextEvent = result.items.find(
-          (event) => new Date(event.endAt).getTime() >= Date.now(),
-        )
-        if (result.isLive && (nextEvent || result.items[0])) {
-          setCalendarDate(new Date((nextEvent || result.items[0]).startAt))
-        }
       }
     }
     void fetchEvents()
@@ -71,19 +68,13 @@ function Events() {
   const dayDate = new Date(calendarDate)
   const monthDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1)
   const year = calendarDate.getFullYear()
-  const range =
-    view === 'Day'
-      ? dayDate.toLocaleDateString('en-US', {
-          weekday: 'short',
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        })
-      : view === 'Month'
-        ? monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-        : view === 'Year'
-          ? String(year)
-          : `${days[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${days[6].toLocaleDateString('en-US', { day: 'numeric', year: 'numeric' })}`
+  const availableYears = useMemo(() => {
+    const currentYear = new Date().getFullYear()
+    const eventYears = parsedEvents.map((event) => event.startAt.getFullYear())
+    const firstYear = Math.min(currentYear - 2, ...eventYears)
+    const lastYear = Math.max(currentYear + 5, ...eventYears)
+    return Array.from({ length: lastYear - firstYear + 1 }, (_, index) => firstYear + index)
+  }, [parsedEvents])
   const hours = Array.from({ length: 9 }, (_, row) => row + 8)
   const selectView = (option: string) => setView(option)
   const moveCalendar = (direction: number) =>
@@ -92,10 +83,13 @@ function Events() {
       if (view === 'Day') next.setDate(next.getDate() + direction)
       if (view === 'Week') next.setDate(next.getDate() + direction * 7)
       if (view === 'Month') next.setMonth(next.getMonth() + direction)
-      if (view === 'Year') next.setFullYear(next.getFullYear() + direction)
       return next
     })
   const goToday = () => setCalendarDate(new Date(today))
+  const selectMonth = (month: number) =>
+    setCalendarDate((current) => new Date(current.getFullYear(), month, 1))
+  const selectYear = (selectedYear: number) =>
+    setCalendarDate((current) => new Date(selectedYear, current.getMonth(), 1))
   const monthLeading = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).getDay()
   const monthDays = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate()
   const monthCells = Array.from({ length: 42 }, (_, index) => index - monthLeading + 1)
@@ -111,7 +105,7 @@ function Events() {
       event.startAt.getMonth() === calendarDate.getMonth(),
   )
   return (
-    <section className="events-section page-width font-sans text-brand-ink">
+    <section className="events-section page-width font-sans text-brand-ink" id="upcoming-events">
       <Title
         title="Upcoming Events"
         description="Stay updated with the latest happenings and activities around Bacolod."
@@ -133,7 +127,7 @@ function Events() {
             className="calendar-views flex items-center justify-center"
             aria-label="Calendar view"
           >
-            {['Day', 'Week', 'Month', 'Year'].map((option) => (
+            {['Day', 'Week', 'Month'].map((option) => (
               <button
                 key={option}
                 className={view === option ? 'active' : ''}
@@ -143,7 +137,30 @@ function Events() {
               </button>
             ))}
           </div>
-          <b>{range}</b>
+          <div className="calendar-date-selectors" aria-label="Choose calendar month and year">
+            <select
+              value={calendarDate.getMonth()}
+              onChange={(event) => selectMonth(Number(event.target.value))}
+              aria-label="Month"
+            >
+              {monthNames.map((month, index) => (
+                <option value={index} key={month}>
+                  {month}
+                </option>
+              ))}
+            </select>
+            <select
+              value={year}
+              onChange={(event) => selectYear(Number(event.target.value))}
+              aria-label="Year"
+            >
+              {availableYears.map((option) => (
+                <option value={option} key={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         {view === 'Week' && (
           <div className="week-scroll overflow-auto">
@@ -236,44 +253,6 @@ function Events() {
                 )
               })}
             </div>
-          </div>
-        )}
-        {view === 'Year' && (
-          <div className="year-view grid">
-            {Array.from({ length: 12 }, (_, month) => (
-              <div className="mini-month" key={month}>
-                <b>{new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long' })}</b>
-                <div>
-                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-                    <small key={`${day}-${index}`}>{day}</small>
-                  ))}
-                  {Array.from({ length: new Date(year, month, 1).getDay() }, (_, index) => (
-                    <i key={`blank-${index}`} />
-                  ))}
-                  {Array.from({ length: new Date(year, month + 1, 0).getDate() }, (_, index) => {
-                    const date = index + 1
-                    const isToday =
-                      year === today.getFullYear() &&
-                      month === today.getMonth() &&
-                      date === today.getDate()
-                    const hasEvent = parsedEvents.some(
-                      (event) =>
-                        event.startAt.getFullYear() === year &&
-                        event.startAt.getMonth() === month &&
-                        event.startAt.getDate() === date,
-                    )
-                    return (
-                      <span
-                        className={`${hasEvent ? 'has-event ' : ''}${isToday ? 'is-today' : ''}`}
-                        key={index}
-                      >
-                        {date}
-                      </span>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
           </div>
         )}
       </div>

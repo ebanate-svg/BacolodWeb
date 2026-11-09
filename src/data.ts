@@ -12,6 +12,7 @@ export type NewsItem = {
   date: string
   title: string
   copy: string
+  body?: string
   image: string
   url?: string
 }
@@ -66,6 +67,7 @@ export type LocalBusinessItem = {
   location: string
   description?: string
   website?: string
+  hours?: string
   rating?: number
   reviewCount?: number
 }
@@ -119,4 +121,57 @@ export const businesses = [
   ['Quan Delicacies', 'Bacolod delicacies · Pastries', 'dining.png'],
   ['Felicia’s Pastry Café', 'Cafe · Desserts', 'destination4.jpg'],
   ['Chicken House', 'Chicken Inasal · Filipino', 'inasal.jpg'],
+]
+
+export const destinations: DestinationItem[] = [
+  {
+    id: 'mambukal-resort',
+    title: 'Mambukal Resort',
+    type: 'Nature',
+    image: asset('destination1.png'),
+    description:
+      'Discover mountain scenery, refreshing springs, and outdoor adventures near Bacolod.',
+  },
+  {
+    id: 'campuestohan-highland-resort',
+    title: 'Campuestohan Highland Resort',
+    type: 'Adventure',
+    image: asset('destination2.png'),
+    description: 'Enjoy family attractions and panoramic highland views in Talisay City.',
+  },
+  {
+    id: 'lakawon-island',
+    title: 'Lakawon Island',
+    type: 'Beach',
+    image: asset('destination3.jpg'),
+    description: 'Relax beside clear waters and soft sand at this popular island destination.',
+  },
+  {
+    id: 'punta-taytay',
+    title: 'Punta Taytay',
+    type: 'Sunset',
+    image: asset('destination4.jpg'),
+    description: 'Experience coastal dining and beautiful sunset views close to the city.',
+  },
+  {
+    id: 'masskara-festival',
+    title: 'MassKara Festival',
+    type: 'Festival',
+    image: asset('destination5.png'),
+    description: 'Celebrate Bacolod’s colorful culture through music, dance, and smiling masks.',
+  },
+  {
+    id: 'negros-museum',
+    title: 'Negros Museum',
+    type: 'Heritage',
+    image: asset('destination6.png'),
+    description: 'Explore stories, art, and artifacts that preserve the heritage of Negros Island.',
+  },
+  {
+    id: 'the-ruins',
+    title: 'The Ruins',
+    type: 'Landmark',
+    image: asset('destination7.jpg'),
+    description: 'Visit the iconic remains of a grand ancestral mansion surrounded by gardens.',
+  },
 ]

@@ -1,14 +1,28 @@
-import { ArrowLeft, ArrowRight, Heart, MapPin, Search, Sparkles, Star } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  Clock3,
+  Heart,
+  MapPin,
+  Search,
+  Smartphone,
+  Sparkles,
+  Star,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import Title from '../components/Title'
-import { businesses, type LocalBusinessItem } from '../data'
-import { loadLocalBusinesses } from '../firebase'
+import { type LocalBusinessItem } from '../data'
+import { loadLocalBusiness, loadLocalBusinesses } from '../firebase'
 import { asset } from '../utils/assets'
 
 function BusinessPage() {
+  const [searchParams] = useSearchParams()
   const [query, setQuery] = useState('')
-  const [category, setCategory] = useState('All Categories')
+  const [category, setCategory] = useState(
+    () => searchParams.get('category')?.trim() || 'All Categories',
+  )
   const [shown, setShown] = useState<LocalBusinessItem[]>([])
   const [categories, setCategories] = useState<string[]>([])
   const [total, setTotal] = useState(0)
@@ -123,7 +137,11 @@ function BusinessPage() {
         {loading && shown.length === 0 ? null : shown.length > 0 ? (
           <div className="business-grid local-business-grid pb-4">
             {shown.map((business, index) => (
-              <Link to="/local-business/21-restaurant" key={business.id}>
+              <Link
+                to={`/local-business/${encodeURIComponent(business.id)}`}
+                state={{ business }}
+                key={business.id}
+              >
                 <div className="business-card-image">
                   <img
                     src={business.image || asset('dining.png')}
@@ -225,58 +243,125 @@ function BusinessPage() {
 }
 
 function BusinessDetail() {
+  const { businessId = '' } = useParams()
+  const location = useLocation()
+  const navigationBusiness = (location.state as { business?: LocalBusinessItem } | null)?.business
+  const initialBusiness = navigationBusiness?.id === businessId ? navigationBusiness : null
+  const [business, setBusiness] = useState<LocalBusinessItem | null>(initialBusiness)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+
+    async function fetchBusiness() {
+      const result = await loadLocalBusiness(businessId, initialBusiness ?? undefined)
+      if (active) {
+        setBusiness(result)
+        setLoading(false)
+      }
+    }
+
+    void fetchBusiness()
+    return () => {
+      active = false
+    }
+  }, [businessId, initialBusiness])
+
+  if (loading && !business) {
+    return (
+      <div className="business-detail-state page-width">
+        <span className="eyebrow">Local directory</span>
+        <h1>Loading business details…</h1>
+      </div>
+    )
+  }
+
+  if (!business) {
+    return (
+      <div className="business-detail-state page-width">
+        <span className="eyebrow">Local directory</span>
+        <h1>Business not found</h1>
+        <p>This business may no longer be publicly listed.</p>
+        <Link className="button" to="/local-business">
+          <ArrowLeft aria-hidden="true" /> Back to directory
+        </Link>
+      </div>
+    )
+  }
+
   return (
-    <div>
+    <div className="business-detail-page min-h-screen font-sans text-brand-ink">
       <section
         className="business-hero"
         style={{
-          backgroundImage: `linear-gradient(#1112,#111b),url(${asset('businessDetail.jpg')})`,
+          backgroundImage: `linear-gradient(90deg, rgb(11 24 50 / 86%), rgb(11 24 50 / 46%)),url(${business.image || asset('businessDetail.jpg')})`,
         }}
       >
-        <Link to="/local-business">
+        <Link className="back-link" to="/local-business">
           <ArrowLeft aria-hidden="true" /> Back to directory
         </Link>
         <div>
-          <span>Filipino · Fine Dining</span>
-          <h1>21 Restaurant</h1>
-          <p>Authentic Negrense flavors and warm Bacolod hospitality.</p>
+          <span>{business.category}</span>
+          <h1>{business.name}</h1>
+          <p>
+            {business.description ||
+              `Discover ${business.name}, a locally listed business in Bacolod City.`}
+          </p>
         </div>
       </section>
-      <section className="content-page page-width font-sans text-brand-ink">
-        <div className="business-summary">
-          <div>
+      <section className="content-page business-detail-content page-width">
+        <div className="business-summary business-detail-summary">
+          <div className="business-detail-main">
             <Title
-              title="A Bacolod dining institution"
-              description="A beloved destination for classic Filipino dishes, seafood specialties, and the city’s signature hospitality."
+              eyebrow="Business information"
+              title={`About ${business.name}`}
+              description={
+                business.description ||
+                'View this public business listing and continue in the Bacolod G App for more information.'
+              }
             />
-            <div className="filter-pills">
-              <button>Overview</button>
-              <button>Menu</button>
-              <button>Photos</button>
-              <button>Reviews</button>
+            <div className="business-detail-facts">
+              <article>
+                <Building2 aria-hidden="true" />
+                <div>
+                  <small>Category</small>
+                  <b>{business.category}</b>
+                </div>
+              </article>
+              <article>
+                <MapPin aria-hidden="true" />
+                <div>
+                  <small>Location</small>
+                  <b>{business.location}</b>
+                </div>
+              </article>
+              {business.hours && (
+                <article>
+                  <Clock3 aria-hidden="true" />
+                  <div>
+                    <small>Business hours</small>
+                    <b>{business.hours}</b>
+                  </div>
+                </article>
+              )}
             </div>
           </div>
-          <aside>
-            <b>Open today</b>
-            <p>11:00 AM – 10:00 PM</p>
-            <p>21st Street, Bacolod City</p>
-            <p>(034) 434-4091</p>
+          <aside className="business-detail-aside">
+            <i aria-hidden="true">
+              <Smartphone />
+            </i>
+            <span className="eyebrow">Continue on mobile</span>
+            <h2>View in the Bacolod G App</h2>
+            <p>Open the app to find more information and available business features.</p>
             <Link className="button" to="/get-app">
-              Leave feedback
+              View in G-App <ArrowRight aria-hidden="true" />
             </Link>
+            {business.website && (
+              <a href={business.website} target="_blank" rel="noreferrer">
+                Visit business website <ArrowRight aria-hidden="true" />
+              </a>
+            )}
           </aside>
-        </div>
-        <Title title="Popular dishes" />
-        <div className="business-grid dishes">
-          {businesses.slice(0, 3).map(([name, type]) => (
-            <article key={name}>
-              <img src={asset('dining.png')} />
-              <div>
-                <h3>{name}</h3>
-                <p>{type}</p>
-              </div>
-            </article>
-          ))}
         </div>
       </section>
     </div>

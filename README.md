@@ -57,6 +57,11 @@ Bacolod eGov Web is a responsive public portal for Bacolod City. It brings city 
    npm run dev
    ```
 
+4. When App Check enforcement is enabled, open the browser console on localhost and copy the
+   generated App Check debug token. In Firebase Console, open **App Check**, select the web app,
+   choose **Manage debug tokens**, and register that token. Never commit a debug token or use it in
+   a production build.
+
 The application uses the placeholder records in `src/data.ts` when Firebase is not configured or a callable function is unavailable. A callable request also falls back after 12 seconds without a response.
 
 ## Firebase Functions

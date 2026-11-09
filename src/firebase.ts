@@ -33,6 +33,17 @@ export const firebaseReady = Boolean(config.apiKey && config.projectId && config
 const app = firebaseReady ? initializeApp(config) : null
 const appCheckSiteKey = import.meta.env.VITE_FIREBASE_APPCHECK_SITE_KEY
 
+// App Check intentionally rejects localhost when production enforcement is enabled.
+// In development, Firebase prints a machine-specific debug token that must be
+// registered in Firebase Console > App Check > Manage debug tokens. Vite removes
+// this branch from production builds, so the debug provider is never shipped live.
+if (import.meta.env.DEV && typeof self !== 'undefined') {
+  const debugSelf = self as typeof self & {
+    FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string
+  }
+  debugSelf.FIREBASE_APPCHECK_DEBUG_TOKEN = true
+}
+
 const appCheck =
   app && appCheckSiteKey
     ? initializeAppCheck(app, {
@@ -98,6 +109,8 @@ const publicBusinessFields = [
   'photoUrl',
   'images',
   'businessHours',
+  'approvalStatus',
+  'visibility',
 ]
 const publicJobFields = [
   'title',
@@ -254,12 +267,14 @@ export const loadLatestNews = (fallback: NewsItem[]): Promise<NewsFeedResult> =>
       return snapshot.docs
         .map((document) => {
           const news = document.data()
+          const body = asText(news.body, 20_000)
           return {
             id: document.id,
             category: capitalize(asText(news.category, 60)) || 'News',
             date: asIsoDate(news.publishedAt) || asIsoDate(news.createdAt),
             title: asText(news.title, 180),
-            copy: asText(news.body, 360),
+            copy: body.slice(0, 360),
+            body,
             image: asText(news.photoUrl, 2000),
           }
         })
@@ -449,6 +464,11 @@ const readBusinessCategories = () => {
 }
 
 const toLocalBusiness = (business: DocumentData): LocalBusinessItem => {
+  const businessHours = business.businessHours as
+    { open?: unknown; close?: unknown } | null | undefined
+  const open = asText(businessHours?.open, 30)
+  const close = asText(businessHours?.close, 30)
+
   return {
     id: business.id,
     name: asText(business.name, 160),
@@ -457,6 +477,44 @@ const toLocalBusiness = (business: DocumentData): LocalBusinessItem => {
     location: asText(business.location || business.address, 240) || 'Bacolod City',
     description: asText(business.description, 500),
     website: asWebUrl(business.website),
+    hours: open && close ? `${open} – ${close}` : undefined,
+  }
+}
+
+async function readPublicBusinessById(id: string): Promise<LocalBusinessItem | null> {
+  if (!/^[A-Za-z0-9_-]{1,1500}$/.test(id)) return null
+
+  const documentPath = `projects/${config.projectId}/databases/(default)/documents/local_businesses/${encodeURIComponent(id)}`
+  const fieldMask = publicBusinessFields
+    .map((field) => `mask.fieldPaths=${encodeURIComponent(field)}`)
+    .join('&')
+  const headers: Record<string, string> = {}
+  if (appCheck) headers['X-Firebase-AppCheck'] = (await getToken(appCheck)).token
+
+  const response = await fetch(
+    `https://firestore.googleapis.com/v1/${documentPath}?key=${config.apiKey}&${fieldMask}`,
+    { headers },
+  )
+  if (response.status === 404 || response.status === 403) return null
+  if (!response.ok) throw new Error(`Firestore returned HTTP ${response.status}.`)
+
+  const document = (await response.json()) as { fields?: Record<string, RestValue> }
+  const business: DocumentData = { ...fromRestFields(document.fields), id }
+  if (business.approvalStatus !== 'approved' || business.visibility !== 'public') return null
+  return toLocalBusiness(business)
+}
+
+export async function loadLocalBusiness(
+  id: string,
+  fallback?: LocalBusinessItem,
+): Promise<LocalBusinessItem | null> {
+  if (!db) return fallback ?? null
+
+  try {
+    return (await withTimeout(readPublicBusinessById(id), 'getLocalBusiness')) ?? fallback ?? null
+  } catch (error) {
+    console.warn(`Unable to load local business ${id}.`, error)
+    return fallback ?? null
   }
 }
 

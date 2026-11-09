@@ -10,8 +10,10 @@ import {
   Quote,
   Sparkles,
   Star,
+  X,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { AppleIcon, GooglePlayIcon } from '../components/AppDownloadBadges'
 import BenefitIcon, { type BenefitIconName } from '../components/BenefitIcon'
@@ -24,6 +26,7 @@ import { asset, formatNewsDate } from '../utils/assets'
 function Home() {
   const [news, setNews] = useState<NewsItem[]>([])
   const [newsLoaded, setNewsLoaded] = useState(false)
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null)
   useEffect(() => {
     let active = true
     async function fetchNews() {
@@ -38,6 +41,23 @@ function Home() {
       active = false
     }
   }, [])
+
+  useEffect(() => {
+    if (!selectedNews) return undefined
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setSelectedNews(null)
+    }
+
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [selectedNews])
   return (
     <div className="landing-page min-h-screen font-sans text-brand-ink">
       <section className="landing-hero relative grid overflow-hidden">
@@ -269,7 +289,7 @@ function Home() {
           ))}
         </div>
       </DeferredSection>
-      <DeferredSection className="discover-section" minHeight={850}>
+      <DeferredSection className="discover-section" id="news" minHeight={850}>
         <div className="discover-card page-width">
           <div className="discover-copy">
             <span className="eyebrow">
@@ -318,7 +338,7 @@ function Home() {
             </figure>
           </div>
         </div>
-        <div className="news-section page-width" id="news">
+        <div className="news-section page-width">
           <Title
             title="Latest News and Announcements"
             description="Stay informed with the most recent updates and initiatives from Bacolod City."
@@ -330,26 +350,87 @@ function Home() {
           )}
           <div className="news-grid">
             {news.slice(0, 3).map((item, index) => (
-              <article key={item.id}>
+              <article
+                className="news-card"
+                key={item.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedNews(item)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setSelectedNews(item)
+                  }
+                }}
+                aria-label={`Read full story: ${item.title}`}
+              >
                 <div className="news-image">
                   <img src={item.image || asset(`news${index + 1}.png`)} alt="" loading="lazy" />
                   <span>{item.category}</span>
                 </div>
-                <div>
+                <div className="news-card-copy">
                   <small>{formatNewsDate(item.date)}</small>
                   <h3>{item.title}</h3>
                   <p>{item.copy}</p>
-                  {item.url ? (
-                    <a href={item.url} target="_blank" rel="noreferrer">
-                      Read <ArrowRight aria-hidden="true" />
-                    </a>
-                  ) : null}
+                  <b>
+                    Read full story <ArrowRight aria-hidden="true" />
+                  </b>
                 </div>
               </article>
             ))}
           </div>
         </div>
       </DeferredSection>
+      {selectedNews &&
+        createPortal(
+          <div
+            className="news-modal-backdrop"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setSelectedNews(null)
+            }}
+          >
+            <section
+              className="news-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="news-modal-title"
+            >
+              <button
+                className="news-modal-close"
+                type="button"
+                onClick={() => setSelectedNews(null)}
+                aria-label="Close news story"
+                autoFocus
+              >
+                <X aria-hidden="true" />
+              </button>
+              <div className="news-modal-image">
+                <img src={selectedNews.image || asset('news1.png')} alt="" />
+                <span>{selectedNews.category}</span>
+              </div>
+              <div className="news-modal-content">
+                <small>{formatNewsDate(selectedNews.date)}</small>
+                <h2 id="news-modal-title">{selectedNews.title}</h2>
+                <p>{selectedNews.body || selectedNews.copy}</p>
+                <div className="news-modal-actions">
+                  {selectedNews.url && (
+                    <a className="button" href={selectedNews.url} target="_blank" rel="noreferrer">
+                      Open original story <ArrowRight aria-hidden="true" />
+                    </a>
+                  )}
+                  <button
+                    className="button button-outline"
+                    type="button"
+                    onClick={() => setSelectedNews(null)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>,
+          document.body,
+        )}
     </div>
   )
 }
