@@ -4814,6 +4814,45 @@ footer {
   line-height: 1.4;
 }
 
+.business-map {
+  position: relative;
+  overflow: hidden;
+  margin-top: 18px;
+  border: 1px solid #efdfcb;
+  border-radius: 16px;
+  background: #fff9f1;
+}
+
+.business-map iframe {
+  display: block;
+  width: 100%;
+  height: 280px;
+  border: 0;
+}
+
+.business-map > a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 46px;
+  padding: 10px 16px;
+  background: #fff;
+  color: #c45d0a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.business-map > a:hover {
+  background: #fff4e5;
+  color: #a94d06;
+}
+
+.business-map > a svg {
+  width: 15px;
+  height: 15px;
+}
+
 .business-detail-aside {
   position: sticky;
   top: 100px;
@@ -4857,6 +4896,13 @@ footer {
 .business-detail-aside .button {
   width: 100%;
   justify-content: center;
+  color: #fff;
+}
+
+.business-detail-aside .button:hover,
+.business-detail-aside .button:focus-visible,
+.business-detail-aside .button:visited {
+  color: #fff;
 }
 
 .business-detail-aside > a:not(.button) {

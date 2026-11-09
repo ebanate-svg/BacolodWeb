@@ -106,32 +106,34 @@ function ServicesPage() {
   )
 }
 
+const BACOLOD_PERMITS_URL = 'https://permits.bacolodcity.gov.ph/'
+
 const bploOptions = [
   [
     'New Business Permit',
     'Register and apply for a new business permit.',
-    '/services/bplo/requirements',
+    BACOLOD_PERMITS_URL,
     'new',
     'Start a business',
   ],
   [
     'Renew Business Permit',
     'Renew your existing permit online.',
-    '/get-app',
+    BACOLOD_PERMITS_URL,
     'renew',
     'Keep records current',
   ],
   [
     'Retire Business',
     'Submit a request to retire a business.',
-    '/get-app',
+    BACOLOD_PERMITS_URL,
     'retire',
     'Close a registration',
   ],
   [
     'Request Certification',
     'Request a certified business record.',
-    '/get-app',
+    BACOLOD_PERMITS_URL,
     'certificate',
     'Get official records',
   ],
@@ -196,8 +198,8 @@ function BploPage() {
         <div className="bplo-grid grid">
           {bploOptions.map(([title, copy, href, icon, label]) => {
             const BploIcon = bploIcons[icon as keyof typeof bploIcons]
-            return (
-              <Link key={title} to={href}>
+            const content = (
+              <>
                 <div className="bplo-card-topline">
                   <i aria-hidden="true">
                     <BploIcon />
@@ -209,6 +211,16 @@ function BploPage() {
                 <span>
                   Continue <ArrowRight aria-hidden="true" />
                 </span>
+              </>
+            )
+
+            return href.startsWith('http') ? (
+              <a href={href} target="_blank" rel="noopener noreferrer" key={title}>
+                {content}
+              </a>
+            ) : (
+              <Link key={title} to={href}>
+                {content}
               </Link>
             )
           })}

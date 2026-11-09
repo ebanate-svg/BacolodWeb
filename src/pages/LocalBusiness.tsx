@@ -289,6 +289,9 @@ function BusinessDetail() {
     )
   }
 
+  const mapQuery = `${business.name}, ${business.location}`
+  const encodedMapQuery = encodeURIComponent(mapQuery)
+
   return (
     <div className="business-detail-page min-h-screen font-sans text-brand-ink">
       <section
@@ -344,6 +347,23 @@ function BusinessDetail() {
                   </div>
                 </article>
               )}
+            </div>
+            <div className="business-map">
+              <iframe
+                src={`https://www.google.com/maps?q=${encodedMapQuery}&output=embed`}
+                title={`${business.name} location on Google Maps`}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodedMapQuery}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MapPin aria-hidden="true" /> Open in Google Maps
+                <ArrowRight aria-hidden="true" />
+              </a>
             </div>
           </div>
           <aside className="business-detail-aside">
