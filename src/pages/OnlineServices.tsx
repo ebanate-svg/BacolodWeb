@@ -73,18 +73,34 @@ function ServicesPage() {
                   <i aria-hidden="true">
                     <ServiceIcon />
                   </i>
-                  <small>{service.external ? 'Available in G-App' : 'Available online'}</small>
+                  <small className={service.external ? 'service-where-app' : undefined}>
+                    {service.external ? 'In the G App' : 'Works in your browser'}
+                  </small>
                 </div>
                 <h3>{service.title}</h3>
+                {service.office && <p className="service-office">{service.office}</p>}
                 <p>{service.description}</p>
+                {service.appFeature && (
+                  <p className="service-app-feature">
+                    In the app, open <b>{service.appFeature}</b>.
+                  </p>
+                )}
                 <span>
-                  {service.external ? 'Open in G-App' : 'Open service'}{' '}
+                  {service.external
+                    ? 'How to open it in the G App'
+                    : service.id === 'case-status-tracker'
+                      ? 'Track your request'
+                      : 'Open service'}{' '}
                   <ArrowRight aria-hidden="true" />
                 </span>
               </>
             )
 
-            return (
+            return service.href.startsWith('http') ? (
+              <a href={service.href} target="_blank" rel="noopener noreferrer" key={service.id}>
+                {content}
+              </a>
+            ) : (
               <Link to={service.href} key={service.id}>
                 {content}
               </Link>

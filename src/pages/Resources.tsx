@@ -57,20 +57,26 @@ function CivicPage() {
               'Public Surveys',
               'Choose a topic',
               'Give feedback on programs, services, and city priorities.',
+              'Take a survey',
+              '/get-app?task=civic',
             ],
             [
               'civic-consultation.jpg',
               'Consultations',
               'Share your feedback',
               'Review proposals and join active public discussions.',
+              'Join a consultation',
+              '/get-app?task=civic',
             ],
             [
               'civic-report-issue.jpg',
               'Report an Issue',
               'Track city action',
               'Tell the city about concerns in your barangay.',
+              'Report a concern',
+              '/get-app?task=report',
             ],
-          ].map(([image, title, step, copy], index) => (
+          ].map(([image, title, step, copy, action, href], index) => (
             <article key={title}>
               <div className="civic-card-image">
                 <img src={asset(image)} alt={step} loading="lazy" />
@@ -80,8 +86,8 @@ function CivicPage() {
                 <span className="eyebrow">{step}</span>
                 <h3>{title}</h3>
                 <p>{copy}</p>
-                <Link className="button button-outline" to="/get-app">
-                  Participate
+                <Link className="button button-outline" to={href}>
+                  {action}
                 </Link>
               </div>
             </article>

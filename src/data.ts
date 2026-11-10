@@ -4,7 +4,12 @@ export type Service = {
   title: string
   description: string
   href: string
+  /** The office acronym, shown under the title. */
+  office?: string
+  /** True when the service is used in the Bacolod G App, not in the browser. */
   external?: boolean
+  /** The tile residents should open in the G App. */
+  appFeature?: string
 }
 export type NewsItem = {
   id: string
@@ -77,37 +82,53 @@ export const GOOGLE_PLAY_URL =
   'https://play.google.com/store/apps/details?id=co.fortistech.bacolodgapp&hl=en'
 export const APP_STORE_URL = 'https://apps.apple.com/us/app/bacolod-city-g-app/id6823100596'
 
+// Same tracker the G App opens (bacolod-app: city_services_main.dart, kCaseTrackerUrl).
+export const CASE_TRACKER_URL = 'https://case6100.bacolodcity.gov.ph/track'
+
+// Phone lines, as shown in the G App's Emergency Hotlines page.
+export const phoneLines = {
+  cityHall: { display: '(034) 434-9122', tel: '+63344349122' },
+  hotline: { display: '(034) 479-6100', tel: '+63344796100' },
+  emergency: { display: '911', tel: '911' },
+}
+
 export const services: Service[] = [
   {
     id: 'bplo',
     icon: 'business',
-    title: 'BPLO',
-    description: 'Business permits, renewals, and registrations.',
+    title: 'Business permits and renewals',
+    office: 'BPLO',
+    description: 'Apply for a new business permit, renew, or register your business online.',
     href: 'https://permits.bacolodcity.gov.ph/',
   },
   {
     id: 'mitcs',
     icon: 'technology',
-    title: 'MITCS Services',
-    description: 'Access Bacolod City’s official digital services through the Bacolod G-App.',
-    href: '/get-app',
+    title: 'City online services',
+    office: 'MITCS',
+    description: 'Land tax, business tax, building permits and online payments.',
+    href: '/get-app?task=city-services',
     external: true,
+    appFeature: 'City Services',
   },
   {
     id: 'case-status-tracker',
     icon: 'tracker',
-    title: 'Case Status Tracker',
-    description: 'Track the progress and current status of submitted cases and requests.',
-    href: '/get-app',
-    external: true,
+    title: 'Track a request',
+    office: 'BCD 6100 Case Status Tracker',
+    description:
+      'Check the status of a concern you reported to the BCD 6100 hotline. Have your ticket number ready.',
+    href: CASE_TRACKER_URL,
   },
   {
     id: 'senior-citizen-portal',
     icon: 'senior',
-    title: 'Senior Citizen Portal',
-    description: 'Access digital information and services created for Bacolod’s senior citizens.',
-    href: '/get-app',
+    title: 'Senior citizen services',
+    office: 'Senior Citizen Portal',
+    description: 'Information and services for Bacolod’s senior citizens.',
+    href: '/get-app?task=senior',
     external: true,
+    appFeature: 'Senior Citizen',
   },
 ]
 

@@ -1,14 +1,16 @@
-import { MapPin, Search, Sparkles } from 'lucide-react'
+import { Loader2, Search, Sparkles } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { type JobItem } from '../data'
 import { loadJobDepartments, loadLatestJobs } from '../firebase'
+import { formatNewsDate } from '../utils/assets'
 
 function JobsPage() {
   const [query, setQuery] = useState('')
   const [jobs, setJobs] = useState<JobItem[]>([])
   const [departments, setDepartments] = useState<string[]>([])
   const [activeDepartment, setActiveDepartment] = useState('All Jobs')
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -21,6 +23,7 @@ function JobsPage() {
       if (active) {
         setJobs(jobResult.items.slice(0, 9))
         setDepartments(departmentResult.items)
+        setLoaded(true)
       }
     }
 
@@ -43,6 +46,9 @@ function JobsPage() {
       }),
     [activeDepartment, jobs, query],
   )
+
+  const isFiltering = query.trim() !== '' || activeDepartment !== 'All Jobs'
+
   return (
     <div className="jobs-page min-h-screen bg-orange-50/30 font-sans text-brand-ink">
       <section className="jobs-hero text-center">
@@ -60,7 +66,7 @@ function JobsPage() {
             aria-label="Job listing highlights"
           >
             <span>
-              <b>{jobs.length}</b> Open positions
+              <b>{loaded ? jobs.length : '…'}</b> Open positions
             </span>
             <span>
               <b>Local</b> Opportunities
@@ -74,7 +80,7 @@ function JobsPage() {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search by job title, office, or employment type"
+              placeholder="Search by job title, employer, or employment type"
               aria-label="Search jobs"
             />
             <button className="button">Search Jobs</button>
@@ -87,7 +93,7 @@ function JobsPage() {
             <span className="eyebrow">Current vacancies</span>
             <h2>Opportunities for every talent</h2>
           </div>
-          <p>{shown.length} positions shown</p>
+          {loaded && <p>{shown.length} positions shown</p>}
         </div>
         {departments.length > 1 && (
           <div className="filter-pills jobs-filters">
@@ -102,29 +108,67 @@ function JobsPage() {
             ))}
           </div>
         )}
-        <div className="job-list">
-          {shown.map(({ id, title, department, salary, type, location }) => (
-            <article key={id}>
+        <div className="job-list" aria-busy={!loaded}>
+          {!loaded && (
+            <div className="jobs-empty" role="status">
+              <i aria-hidden="true">
+                <Loader2 className="jobs-loading-icon" />
+              </i>
+              <h3>Loading vacancies…</h3>
+              <p>Getting the latest openings from the city.</p>
+            </div>
+          )}
+          {shown.map((job) => (
+            <article key={job.id}>
               <div className="job-details">
-                <span>{type}</span>
-                <h3>{title}</h3>
-                {departments.length > 1 && <p>{department}</p>}
-                <small>
-                  <MapPin aria-hidden="true" /> {location} · {salary}
-                </small>
+                <span>{job.type}</span>
+                <h3>{job.title}</h3>
+                <dl className="job-facts">
+                  <div>
+                    <dt>Employer</dt>
+                    <dd>{job.department}</dd>
+                  </div>
+                  <div>
+                    <dt>Location</dt>
+                    <dd>{job.location}</dd>
+                  </div>
+                  <div>
+                    <dt>Salary</dt>
+                    <dd>{job.salary}</dd>
+                  </div>
+                  {job.postedAt && (
+                    <div>
+                      <dt>Posted</dt>
+                      <dd>{formatNewsDate(job.postedAt)}</dd>
+                    </div>
+                  )}
+                  <div className="job-facts-wide">
+                    <dt>How to apply</dt>
+                    <dd>{job.applicationInstructions || 'Apply in the Bacolod G App.'}</dd>
+                  </div>
+                </dl>
               </div>
-              <Link className="button button-outline" to="/get-app">
-                Apply Now
+              <Link className="button button-outline" to="/get-app?task=job">
+                Apply in the G App
               </Link>
             </article>
           ))}
-          {shown.length === 0 && (
-            <div className="jobs-empty">
+          {loaded && shown.length === 0 && isFiltering && (
+            <div className="jobs-empty" role="status">
               <i aria-hidden="true">
                 <Search />
               </i>
               <h3>No matching positions</h3>
-              <p>Try another title, office, or employment type.</p>
+              <p>Try another title, employer, or employment type.</p>
+            </div>
+          )}
+          {loaded && jobs.length === 0 && !isFiltering && (
+            <div className="jobs-empty" role="status">
+              <i aria-hidden="true">
+                <Search />
+              </i>
+              <h3>No vacancies to show right now</h3>
+              <p>New vacancies are posted here. Please check again later.</p>
             </div>
           )}
         </div>

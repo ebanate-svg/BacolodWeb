@@ -1,5 +1,6 @@
-import { Clock3, Mail, MapPin, Phone, Sparkles } from 'lucide-react'
+import { Clock3, Headset, Mail, MapPin, Phone, Siren, Sparkles } from 'lucide-react'
 import GetAppPanel from '../components/GetAppPanel'
+import { phoneLines } from '../data'
 
 function ContactPage() {
   return (
@@ -32,10 +33,40 @@ function ContactPage() {
           <div>
             <span className="eyebrow">Contact Bacolod City</span>
             <h2>Reach the city</h2>
-            <p>Call, email, or visit the city office. For requests, use the Bacolod G App.</p>
+            <p>
+              Call the right line below, email, or visit City Hall. For requests, use the Bacolod G
+              App.
+            </p>
           </div>
-          <a className="button button-outline" href="tel:+63344349122">
-            Call (034) 434-9122
+        </div>
+
+        <div className="call-options" aria-label="Phone numbers">
+          <a className="call-option" href={`tel:${phoneLines.cityHall.tel}`}>
+            <Phone aria-hidden="true" />
+            <span>
+              <b>City Hall</b>
+              <small>Offices and general questions · Monday–Friday, 8:00 AM–5:00 PM</small>
+              <strong>{phoneLines.cityHall.display}</strong>
+            </span>
+          </a>
+          <a className="call-option" href={`tel:${phoneLines.hotline.tel}`}>
+            <Headset aria-hidden="true" />
+            <span>
+              <b>BCD 6100 Hotline</b>
+              <small>
+                Non-emergency city concerns: garbage, traffic, roads, permits, assistance · English
+                and Hiligaynon
+              </small>
+              <strong>{phoneLines.hotline.display}</strong>
+            </span>
+          </a>
+          <a className="call-option call-option-emergency" href={`tel:${phoneLines.emergency.tel}`}>
+            <Siren aria-hidden="true" />
+            <span>
+              <b>Emergency</b>
+              <small>Police, fire, or medical emergency</small>
+              <strong>{phoneLines.emergency.display}</strong>
+            </span>
           </a>
         </div>
 
@@ -87,10 +118,6 @@ function ContactPage() {
                   <p>Monday–Friday, 8:00 AM–5:00 PM</p>
                 </span>
               </div>
-            </div>
-            <div className="contact-emergency-note">
-              <b>Need urgent assistance?</b>
-              <p>For emergencies, contact the appropriate emergency service directly.</p>
             </div>
           </aside>
 
