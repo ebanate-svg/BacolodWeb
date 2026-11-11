@@ -21,7 +21,11 @@ function Layout({ children }: { children: ReactNode }) {
   return (
     <>
       <Header />
-      <main className="min-h-screen font-sans text-brand-ink">{children}</main>
+      <main className="min-h-screen font-sans text-brand-ink">
+        <div className="route-enter" key={pathname}>
+          {children}
+        </div>
+      </main>
       <Footer />
     </>
   )

@@ -1,4 +1,4 @@
-import { Loader2, Search, Sparkles } from 'lucide-react'
+import { ArrowRight, Loader2, Search, Sparkles } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { type JobItem } from '../data'
@@ -95,17 +95,23 @@ function JobsPage() {
           </div>
           {loaded && <p>{shown.length} positions shown</p>}
         </div>
-        {departments.length > 1 && (
+        {(departments.length > 1 || (loaded && jobs.length > 0)) && (
           <div className="filter-pills jobs-filters">
-            {['All Jobs', ...departments].map((department) => (
-              <button
-                className={activeDepartment === department ? 'active' : ''}
-                key={department}
-                onClick={() => setActiveDepartment(department)}
-              >
-                {department}
-              </button>
-            ))}
+            {departments.length > 1 &&
+              ['All Jobs', ...departments].map((department) => (
+                <button
+                  className={activeDepartment === department ? 'active' : ''}
+                  key={department}
+                  onClick={() => setActiveDepartment(department)}
+                >
+                  {department}
+                </button>
+              ))}
+            {loaded && jobs.length > 0 && (
+              <Link className="button jobs-show-all" to="/get-app?task=job">
+                Show All Jobs <ArrowRight aria-hidden="true" />
+              </Link>
+            )}
           </div>
         )}
         <div className="job-list" aria-busy={!loaded}>

@@ -20,7 +20,6 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { AppleIcon, GooglePlayIcon } from '../components/AppDownloadBadges'
-import BenefitIcon, { type BenefitIconName } from '../components/BenefitIcon'
 import DeferredSection from '../components/DeferredSection'
 import Title from '../components/Title'
 import { APP_STORE_URL, CASE_TRACKER_URL, GOOGLE_PLAY_URL, type NewsItem } from '../data'
@@ -353,44 +352,6 @@ function Home() {
               </span>
             </a>
           </div>
-        </div>
-      </DeferredSection>
-      <DeferredSection className="benefits-section" minHeight={300}>
-        <Title
-          title="Why Choose eGov?"
-          description="Experience seamless digital governance at your fingertips"
-        />
-        <div className="benefit-grid page-width">
-          {[
-            [
-              'convenience',
-              'Enhanced Convenience',
-              'Providing residents with a user-friendly digital experience through our web and mobile apps—offering seamless access to government services, documents, and updates.',
-            ],
-            [
-              'process',
-              'Streamlined Processes',
-              'Simplifying citizen transactions such as online payments, service requests, and document access—reducing paperwork and improving efficiency across both app platforms.',
-            ],
-            [
-              'accessibility',
-              'Expanded Accessibility',
-              'With the Bacolod eGov web portal and mobile app, citizens can connect with the local government 24/7, whether at home or on the go.',
-            ],
-            [
-              'updates',
-              'Real-Time Information',
-              'Stay informed with instant updates, alerts, and announcements delivered directly through the eGov app and portal.',
-            ],
-          ].map(([icon, title, description]) => (
-            <article key={title}>
-              <i>
-                <BenefitIcon name={icon as BenefitIconName} />
-              </i>
-              <h3>{title}</h3>
-              <p>{description}</p>
-            </article>
-          ))}
         </div>
       </DeferredSection>
       <DeferredSection className="mayor-section page-width" minHeight={440}>

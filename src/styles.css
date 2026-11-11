@@ -126,7 +126,7 @@ h6 {
   text-wrap: balance;
 }
 a {
-  color: inherit;
+  /* color: inherit; */
   text-decoration: none;
 }
 button,
@@ -6082,9 +6082,22 @@ footer {
   color: #c45a08;
 }
 
-.jobs-filters button:first-child {
+.jobs-filters button.active {
   border-color: #ec7d16;
   background: #ec7d16;
+  color: #fff;
+}
+
+.jobs-filters button:not(.active) {
+  border-color: #ead8c3;
+  background: #fff;
+  color: #555f70;
+}
+
+.jobs-filters .jobs-show-all {
+  min-width: 140px;
+  margin-left: auto;
+  color: #fff;
 }
 
 .jobs-page .job-list {
@@ -6285,6 +6298,58 @@ footer {
   * {
     scroll-behavior: auto !important;
     transition: none !important;
+  }
+}
+
+/* Route entrance motion: subtle enough for service pages, with staggered content sections. */
+.route-enter {
+  animation: route-slide-in 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.route-enter > div > section {
+  animation: route-section-slide-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.route-enter > div > section:nth-of-type(2) {
+  animation-delay: 80ms;
+}
+
+.route-enter > div > section:nth-of-type(3) {
+  animation-delay: 140ms;
+}
+
+.route-enter > div > section:nth-of-type(n + 4) {
+  animation-delay: 190ms;
+}
+
+@keyframes route-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes route-section-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-enter,
+  .route-enter > div > section {
+    animation: none;
   }
 }
 
@@ -9735,6 +9800,35 @@ footer {
 }
 
 /* Resident-first home top: compact photo banner and task buttons */
+.landing-page {
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-page > .home-top {
+  order: 1;
+}
+
+.landing-page > .home-news {
+  order: 2;
+}
+
+.landing-page > .discover-section {
+  order: 3;
+}
+
+.landing-page > .mayor-section {
+  order: 4;
+}
+
+.landing-page > .city-stats {
+  order: 5;
+}
+
+.landing-page > .portal-section {
+  order: 6;
+}
+
 .home-top {
   padding-bottom: 8px;
   background: linear-gradient(180deg, #fff6ec 0%, #fff 100%);
