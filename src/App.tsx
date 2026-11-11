@@ -1,15 +1,17 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import BidsPage from './pages/Bids'
 import ContactPage from './pages/Contact'
+import DestinationsPage from './pages/Destinations'
+import GetAppPage from './pages/GetApp'
 import Home from './pages/Home'
 import JobsPage from './pages/Jobs'
+import { PrivacyPage, TermsPage } from './pages/Legal'
 import BusinessPage, { BusinessDetail } from './pages/LocalBusiness'
 import NotFound from './pages/NotFound'
-import ServicesPage, { BploPage, PermitApplication, RequirementsPage } from './pages/OnlineServices'
+import ServicesPage, { BploPage, RequirementsPage } from './pages/OnlineServices'
 import ResourcesPage from './pages/Resources'
 import TourismPage from './pages/Tourism'
-import WastePage from './pages/WasteManagement'
 
 export default function App() {
   return (
@@ -19,10 +21,9 @@ export default function App() {
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/services/bplo" element={<BploPage />} />
         <Route path="/services/bplo/requirements" element={<RequirementsPage />} />
-        <Route path="/services/bplo/apply" element={<PermitApplication />} />
+        <Route path="/services/bplo/apply" element={<Navigate to="/get-app" replace />} />
         <Route path="/tourism" element={<TourismPage />} />
-        <Route path="/waste" element={<WastePage />} />
-        <Route path="/wasteManagement" element={<WastePage />} />
+        <Route path="/tourism/destinations" element={<DestinationsPage />} />
         <Route path="/jobs" element={<JobsPage />} />
         <Route path="/jobListing" element={<JobsPage />} />
         <Route path="/bids" element={<BidsPage />} />
@@ -30,10 +31,13 @@ export default function App() {
         <Route path="/procurement" element={<BidsPage procurement />} />
         <Route path="/local-business" element={<BusinessPage />} />
         <Route path="/localBusiness" element={<BusinessPage />} />
-        <Route path="/local-business/21-restaurant" element={<BusinessDetail />} />
+        <Route path="/local-business/:businessId" element={<BusinessDetail />} />
         <Route path="/civic" element={<ResourcesPage />} />
         <Route path="/civicEngagement" element={<ResourcesPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/get-app" element={<GetAppPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Layout>

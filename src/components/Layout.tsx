@@ -4,14 +4,28 @@ import Footer from './Footer'
 import Header from './Header'
 
 function Layout({ children }: { children: ReactNode }) {
-  const { pathname } = useLocation()
+  const { pathname, hash } = useLocation()
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [pathname])
+    if (!hash) {
+      window.scrollTo(0, 0)
+      return
+    }
+
+    const targetId = decodeURIComponent(hash.slice(1))
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [hash, pathname])
   return (
     <>
       <Header />
-      <main className="min-h-screen font-sans text-brand-ink">{children}</main>
+      <main className="min-h-screen font-sans text-brand-ink">
+        <div className="route-enter" key={pathname}>
+          {children}
+        </div>
+      </main>
       <Footer />
     </>
   )

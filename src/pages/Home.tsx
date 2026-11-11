@@ -1,36 +1,79 @@
 import {
   ArrowRight,
   Banknote,
-  Clock3,
+  Briefcase,
+  Building2,
   FileText,
-  Heart,
+  Globe,
   Landmark,
   MapPin,
+  Megaphone,
   Newspaper,
   Quote,
-  Sparkles,
+  ScanSearch,
+  Smartphone,
   Star,
+  X,
+  type LucideIcon,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { AppleIcon, GooglePlayIcon } from '../components/AppDownloadBadges'
-import BenefitIcon, { type BenefitIconName } from '../components/BenefitIcon'
 import DeferredSection from '../components/DeferredSection'
 import Title from '../components/Title'
-import { news as fallbackNews, type NewsItem } from '../data'
+import { APP_STORE_URL, CASE_TRACKER_URL, GOOGLE_PLAY_URL, type NewsItem } from '../data'
 import { loadLatestNews } from '../firebase'
 import { asset, formatNewsDate } from '../utils/assets'
 
+const residentTasks: {
+  label: string
+  note: string
+  where: 'web' | 'app'
+  to: string
+  icon: LucideIcon
+}[] = [
+  {
+    label: 'Apply for or renew a business permit',
+    note: 'Business Permits and Licensing Office (BPLO)',
+    where: 'web',
+    to: '/services/bplo',
+    icon: Building2,
+  },
+  {
+    label: 'Find a job',
+    note: 'Open positions in Bacolod',
+    where: 'web',
+    to: '/jobs',
+    icon: Briefcase,
+  },
+  {
+    label: 'Track a request',
+    note: 'Use the ticket number from the BCD 6100 hotline',
+    where: 'web',
+    to: CASE_TRACKER_URL,
+    icon: ScanSearch,
+  },
+  {
+    label: 'Report a barangay concern',
+    note: 'Open “Community Issue Report” in the app',
+    where: 'app',
+    to: '/get-app?task=report',
+    icon: Megaphone,
+  },
+]
+
 function Home() {
-  const [news, setNews] = useState<NewsItem[]>(fallbackNews)
-  const [newsIsLive, setNewsIsLive] = useState(false)
+  const [news, setNews] = useState<NewsItem[]>([])
+  const [newsLoaded, setNewsLoaded] = useState(false)
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null)
   useEffect(() => {
     let active = true
     async function fetchNews() {
-      const result = await loadLatestNews(fallbackNews)
+      const result = await loadLatestNews([])
       if (active) {
         setNews(result.items)
-        setNewsIsLive(result.isLive)
+        setNewsLoaded(true)
       }
     }
     void fetchNews()
@@ -38,56 +81,183 @@ function Home() {
       active = false
     }
   }, [])
+
+  useEffect(() => {
+    if (!selectedNews) return undefined
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setSelectedNews(null)
+    }
+
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [selectedNews])
   return (
     <div className="landing-page min-h-screen font-sans text-brand-ink">
-      <section className="landing-hero relative grid overflow-hidden">
-        <img
-          className="h-full w-full object-cover"
-          src={asset('slider1.png')}
-          alt="MassKara Festival dancers"
-        />
-        <div className="relative z-10 text-center">
-          <span className="hero-kicker inline-flex items-center justify-center">
-            <Sparkles aria-hidden="true" /> Bacolod City Digital Services
-          </span>
-          <h1 className="font-heading font-extrabold tracking-[-0.055em]">
-            Empowering Bacolod
-            <br />
-            Through Digital Governance
-          </h1>
-          <p>
-            Access essential city services and updates from your computer or mobile device—anytime,
-            anywhere.
-          </p>
-          <div
-            className="hero-meta flex flex-wrap items-center justify-center"
-            aria-label="Portal highlights"
-          >
-            <span>
-              <Clock3 aria-hidden="true" /> 24/7 Access
-            </span>
-            <span>
-              <MapPin aria-hidden="true" /> Bacolod City
-            </span>
-            <span>
-              <Heart aria-hidden="true" /> Citizen First
-            </span>
-          </div>
-          <div className="hero-actions flex flex-wrap items-center justify-center">
-            <Link className="button" to="/services">
-              Explore Services
-            </Link>
-            <Link className="button button-outline" to="/tourism">
-              Discover Bacolod
-            </Link>
+      <section className="home-top">
+        <div className="home-top-banner">
+          <img src={asset('slider1.png')} alt="MassKara Festival dancers in Bacolod City" />
+          <div className="home-top-copy page-width">
+            <span className="home-top-kicker">Bacolod City eGov</span>
+            <h1>What do you need today?</h1>
+            <p lang="hil">Ano ang kinahanglan mo subong?</p>
           </div>
         </div>
-        <img
-          className="h-full w-full object-cover"
-          src={asset('slider2.png')}
-          alt="Bacolod community"
-        />
+        <nav className="task-grid page-width" aria-label="Common tasks">
+          {residentTasks.map(({ label, note, where, to, icon: TaskIcon }) => {
+            const content = (
+              <>
+                <i aria-hidden="true">
+                  <TaskIcon />
+                </i>
+                <span className="task-text">
+                  <b>{label}</b>
+                  <small>{note}</small>
+                </span>
+                <span className={`task-where task-where-${where}`}>
+                  {where === 'app' ? (
+                    <>
+                      <Smartphone aria-hidden="true" /> In the G App
+                    </>
+                  ) : (
+                    <>
+                      <Globe aria-hidden="true" /> Works in your browser
+                    </>
+                  )}
+                </span>
+              </>
+            )
+            return to.startsWith('http') ? (
+              <a
+                className="task-card"
+                href={to}
+                target="_blank"
+                rel="noopener noreferrer"
+                key={label}
+              >
+                {content}
+              </a>
+            ) : (
+              <Link className="task-card" to={to} key={label}>
+                {content}
+              </Link>
+            )
+          })}
+        </nav>
+        <p className="home-top-more page-width">
+          <Link to="/services">
+            See all city services <ArrowRight aria-hidden="true" />
+          </Link>
+        </p>
       </section>
+      <DeferredSection className="home-news" id="news" minHeight={420}>
+        <div className="news-section page-width">
+          <Title
+            title="Latest News and Announcements"
+            description="Stay informed with the most recent updates and initiatives from Bacolod City."
+          />
+          {newsLoaded && news.length === 0 && (
+            <p className="news-feed-notice" role="status">
+              News is not available right now. Please check again later.
+            </p>
+          )}
+          <div className="news-grid">
+            {news.slice(0, 3).map((item, index) => (
+              <article
+                className="news-card"
+                key={item.id}
+                role="button"
+                tabIndex={0}
+                onClick={() =>
+                  setSelectedNews({
+                    ...item,
+                    image: item.image || asset(`news${index + 1}.png`),
+                  })
+                }
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setSelectedNews({
+                      ...item,
+                      image: item.image || asset(`news${index + 1}.png`),
+                    })
+                  }
+                }}
+                aria-label={`Read full story: ${item.title}`}
+              >
+                <div className="news-image">
+                  <img src={item.image || asset(`news${index + 1}.png`)} alt="" loading="lazy" />
+                  <span>{item.category}</span>
+                </div>
+                <div className="news-card-copy">
+                  <small>{formatNewsDate(item.date)}</small>
+                  <h3>{item.title}</h3>
+                  <p>{item.copy}</p>
+                  <b>
+                    Read full story <ArrowRight aria-hidden="true" />
+                  </b>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </DeferredSection>
+      <DeferredSection className="discover-section" minHeight={620}>
+        <div className="discover-card page-width">
+          <div className="discover-copy">
+            <span className="eyebrow">
+              <Landmark aria-hidden="true" /> Explore Bacolod
+            </span>
+            <h2>
+              Discover Bacolod —<br />
+              <em>The City of Smiles</em>
+            </h2>
+            <p>
+              Explore the vibrant culture, heritage, and attractions that make Bacolod one of the
+              Philippines’ most beloved destinations.
+            </p>
+            <p className="discover-detail">
+              Bacolod City is more than just a bustling urban hub—it’s a cultural experience filled
+              with warmth, color, and tradition. From its famous MassKara Festival to its rich
+              culinary heritage and historic landmarks, Bacolod invites visitors to experience the
+              perfect blend of hospitality and innovation.
+            </p>
+            <Link className="button" to="/tourism">
+              Explore More <ArrowRight aria-hidden="true" />
+            </Link>
+          </div>
+          <div className="discover-images">
+            <figure className="discover-featured">
+              <img src={asset('slider1.png')} alt="MassKara Festival dancers" loading="lazy" />
+              <span>Featured</span>
+              <figcaption>
+                <b>MassKara Festival</b>
+                <small>
+                  Celebrate smiles, music, and rich culture in the most colorful event in Bacolod.
+                </small>
+              </figcaption>
+            </figure>
+            <figure>
+              <img src={asset('inasal.jpg')} alt="Bacolod chicken inasal" loading="lazy" />
+              <figcaption>
+                <b>Local Flavors</b>
+              </figcaption>
+            </figure>
+            <figure>
+              <img src={asset('ruins.jpg')} alt="The Ruins heritage landmark" loading="lazy" />
+              <figcaption>
+                <b>The Ruins</b>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </DeferredSection>
       <DeferredSection className="portal-section page-width grid items-center" minHeight={360}>
         <div>
           <h2>
@@ -163,11 +333,7 @@ function Home() {
                 <b>Access the Web</b>
               </span>
             </Link>
-            <a
-              href="https://play.google.com/store/apps/details?id=co.fortistech.bacolodgapp"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href={GOOGLE_PLAY_URL} target="_blank" rel="noreferrer">
               <i aria-hidden="true">
                 <GooglePlayIcon />
               </i>
@@ -176,7 +342,7 @@ function Home() {
                 <b>Get it on Google Play</b>
               </span>
             </a>
-            <a href="#app-store">
+            <a href={APP_STORE_URL} target="_blank" rel="noreferrer">
               <i className="apple-access-icon" aria-hidden="true">
                 <AppleIcon />
               </i>
@@ -186,31 +352,6 @@ function Home() {
               </span>
             </a>
           </div>
-        </div>
-      </DeferredSection>
-      <DeferredSection className="benefits-section" minHeight={300}>
-        <Title
-          title="Why Choose eGov?"
-          description="Experience seamless digital governance at your fingertips"
-        />
-        <div className="benefit-grid page-width">
-          {[
-            ['convenience', 'Enhanced Convenience'],
-            ['process', 'Streamlined Processes'],
-            ['accessibility', 'Expanded Accessibility'],
-            ['updates', 'Real-Time Information'],
-          ].map(([icon, title]) => (
-            <article key={title}>
-              <i>
-                <BenefitIcon name={icon as BenefitIconName} />
-              </i>
-              <h3>{title}</h3>
-              <p>
-                Access city services with a user-friendly digital experience available whenever and
-                wherever you need it.
-              </p>
-            </article>
-          ))}
         </div>
       </DeferredSection>
       <DeferredSection className="mayor-section page-width" minHeight={440}>
@@ -260,87 +401,56 @@ function Home() {
           ))}
         </div>
       </DeferredSection>
-      <DeferredSection className="discover-section" minHeight={850}>
-        <div className="discover-card page-width">
-          <div className="discover-copy">
-            <span className="eyebrow">
-              <Landmark aria-hidden="true" /> Explore Bacolod
-            </span>
-            <h2>
-              Discover Bacolod —<br />
-              <em>The City of Smiles</em>
-            </h2>
-            <p>
-              Explore the vibrant culture, heritage, and attractions that make Bacolod one of the
-              Philippines’ most beloved destinations.
-            </p>
-            <p className="discover-detail">
-              Bacolod City is more than just a bustling urban hub—it’s a cultural experience filled
-              with warmth, color, and tradition. From its famous MassKara Festival to its rich
-              culinary heritage and historic landmarks, Bacolod invites visitors to experience the
-              perfect blend of hospitality and innovation.
-            </p>
-            <Link className="button" to="/tourism">
-              Explore More <ArrowRight aria-hidden="true" />
-            </Link>
-          </div>
-          <div className="discover-images">
-            <figure className="discover-featured">
-              <img src={asset('slider1.png')} alt="MassKara Festival dancers" loading="lazy" />
-              <span>Featured</span>
-              <figcaption>
-                <b>MassKara Festival</b>
-                <small>
-                  Celebrate smiles, music, and rich culture in the most colorful event in Bacolod.
-                </small>
-              </figcaption>
-            </figure>
-            <figure>
-              <img src={asset('inasal.jpg')} alt="Bacolod chicken inasal" loading="lazy" />
-              <figcaption>
-                <b>Local Flavors</b>
-              </figcaption>
-            </figure>
-            <figure>
-              <img src={asset('ruins.jpg')} alt="The Ruins heritage landmark" loading="lazy" />
-              <figcaption>
-                <b>The Ruins</b>
-              </figcaption>
-            </figure>
-          </div>
-        </div>
-        <div className="news-section page-width" id="news">
-          <Title
-            title="Latest News and Announcements"
-            description="Stay informed with the most recent updates and initiatives from Bacolod City."
-          />
-          {!newsIsLive && (
-            <p className="news-feed-notice" role="status">
-              Live updates are temporarily unavailable. Showing sample announcements.
-            </p>
-          )}
-          <div className="news-grid">
-            {news.slice(0, 3).map((item, index) => (
-              <article key={item.id}>
-                <div className="news-image">
-                  <img src={item.image || asset(`news${index + 1}.png`)} alt="" loading="lazy" />
-                  <span>{item.category}</span>
-                </div>
-                <div>
-                  <small>{formatNewsDate(item.date)}</small>
-                  <h3>{item.title}</h3>
-                  <p>{item.copy}</p>
-                  {item.url ? (
-                    <a href={item.url} target="_blank" rel="noreferrer">
-                      Read <ArrowRight aria-hidden="true" />
+      {selectedNews &&
+        createPortal(
+          <div
+            className="news-modal-backdrop"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setSelectedNews(null)
+            }}
+          >
+            <section
+              className="news-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="news-modal-title"
+            >
+              <button
+                className="news-modal-close"
+                type="button"
+                onClick={() => setSelectedNews(null)}
+                aria-label="Close news story"
+                autoFocus
+              >
+                <X aria-hidden="true" />
+              </button>
+              <div className="news-modal-image">
+                <img src={selectedNews.image || asset('news1.png')} alt="" />
+                <span>{selectedNews.category}</span>
+              </div>
+              <div className="news-modal-content">
+                <small>{formatNewsDate(selectedNews.date)}</small>
+                <h2 id="news-modal-title">{selectedNews.title}</h2>
+                <p>{selectedNews.body || selectedNews.copy}</p>
+                <div className="news-modal-actions">
+                  {selectedNews.url && (
+                    <a className="button" href={selectedNews.url} target="_blank" rel="noreferrer">
+                      Open original story <ArrowRight aria-hidden="true" />
                     </a>
-                  ) : null}
+                  )}
+                  <button
+                    className="button button-outline"
+                    type="button"
+                    onClick={() => setSelectedNews(null)}
+                  >
+                    Close
+                  </button>
                 </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </DeferredSection>
+              </div>
+            </section>
+          </div>,
+          document.body,
+        )}
     </div>
   )
 }

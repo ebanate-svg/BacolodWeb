@@ -1,6 +1,24 @@
 {
   "projects": {
     "default": "bacolod-g-app",
+    "dev": "bacolod-citizen-app",
     "prod": "bacolod-g-app"
-  }
+  },
+  "targets": {
+    "bacolod-citizen-app": {
+      "hosting": {
+        "egov-web": [
+          "bacolod-egov-dev"
+        ]
+      }
+    },
+    "bacolod-g-app": {
+      "hosting": {
+        "egov-web": [
+          "bacolod-egov"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

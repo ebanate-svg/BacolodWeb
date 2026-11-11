@@ -20,7 +20,7 @@ import {
   Sparkles,
   XCircle,
 } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Title from '../components/Title'
 import { services } from '../data'
@@ -73,19 +73,31 @@ function ServicesPage() {
                   <i aria-hidden="true">
                     <ServiceIcon />
                   </i>
-                  <small>{service.external ? 'Available in G-App' : 'Available online'}</small>
+                  <small className={service.external ? 'service-where-app' : undefined}>
+                    {service.external ? 'In the G App' : 'Works in your browser'}
+                  </small>
                 </div>
                 <h3>{service.title}</h3>
+                {service.office && <p className="service-office">{service.office}</p>}
                 <p>{service.description}</p>
+                {service.appFeature && (
+                  <p className="service-app-feature">
+                    In the app, open <b>{service.appFeature}</b>.
+                  </p>
+                )}
                 <span>
-                  {service.external ? 'Open in G-App' : 'Open service'}{' '}
+                  {service.external
+                    ? 'How to open it in the G App'
+                    : service.id === 'case-status-tracker'
+                      ? 'Track your request'
+                      : 'Open service'}{' '}
                   <ArrowRight aria-hidden="true" />
                 </span>
               </>
             )
 
-            return service.external ? (
-              <a href={service.href} key={service.id} target="_blank" rel="noreferrer">
+            return service.href.startsWith('http') ? (
+              <a href={service.href} target="_blank" rel="noopener noreferrer" key={service.id}>
                 {content}
               </a>
             ) : (
@@ -110,39 +122,41 @@ function ServicesPage() {
   )
 }
 
+const BACOLOD_PERMITS_URL = 'https://permits.bacolodcity.gov.ph/'
+
 const bploOptions = [
   [
     'New Business Permit',
     'Register and apply for a new business permit.',
-    '/services/bplo/requirements',
+    BACOLOD_PERMITS_URL,
     'new',
     'Start a business',
   ],
   [
     'Renew Business Permit',
     'Renew your existing permit online.',
-    '/services/bplo/apply',
+    BACOLOD_PERMITS_URL,
     'renew',
     'Keep records current',
   ],
   [
     'Retire Business',
     'Submit a request to retire a business.',
-    '/services/bplo/apply',
+    BACOLOD_PERMITS_URL,
     'retire',
     'Close a registration',
   ],
   [
     'Request Certification',
     'Request a certified business record.',
-    '/services/bplo/apply',
+    BACOLOD_PERMITS_URL,
     'certificate',
     'Get official records',
   ],
   [
     'Track Application',
     'Check your application status.',
-    '/services/bplo/apply',
+    '/get-app',
     'track',
     'Follow your progress',
   ],
@@ -200,8 +214,8 @@ function BploPage() {
         <div className="bplo-grid grid">
           {bploOptions.map(([title, copy, href, icon, label]) => {
             const BploIcon = bploIcons[icon as keyof typeof bploIcons]
-            return (
-              <Link key={title} to={href}>
+            const content = (
+              <>
                 <div className="bplo-card-topline">
                   <i aria-hidden="true">
                     <BploIcon />
@@ -213,6 +227,16 @@ function BploPage() {
                 <span>
                   Continue <ArrowRight aria-hidden="true" />
                 </span>
+              </>
+            )
+
+            return href.startsWith('http') ? (
+              <a href={href} target="_blank" rel="noopener noreferrer" key={title}>
+                {content}
+              </a>
+            ) : (
+              <Link key={title} to={href}>
+                {content}
               </Link>
             )
           })}
@@ -251,11 +275,11 @@ function RequirementsPage() {
             <Sparkles aria-hidden="true" /> New Business Permit
           </span>
           <h1>Prepare Your Application</h1>
-          <p>Review the documents you need, mark each one ready, then begin your application.</p>
+          <p>Review the documents you need, then apply through the Bacolod G App.</p>
           <div className="requirements-highlights" aria-label="Application information">
             <span>3 required documents</span>
             <span>PDF, JPG, or PNG</span>
-            <span>Secure online submission</span>
+            <span>Apply through the G App</span>
           </div>
         </div>
       </section>
@@ -308,9 +332,9 @@ function RequirementsPage() {
             </span>
             <span className="eyebrow">Next step</span>
             <h2>Apply for a New Business Permit</h2>
-            <p>Once your documents are ready, begin the secure online application.</p>
-            <Link className="button" to="/services/bplo/apply">
-              Start application <ArrowRight aria-hidden="true" />
+            <p>Once your documents are ready, apply through the Bacolod G App.</p>
+            <Link className="button" to="/get-app">
+              Get the app <ArrowRight aria-hidden="true" />
             </Link>
             <div className="requirements-help">
               <b>Need help?</b>
@@ -334,193 +358,5 @@ function RequirementsPage() {
   )
 }
 
-function PermitApplication() {
-  const [step, setStep] = useState(1)
-  const [sent, setSent] = useState(false)
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (step < 3) setStep(step + 1)
-    else setSent(true)
-  }
-  if (sent)
-    return (
-      <div className="permit-page permit-success-page min-h-screen bg-orange-50/30 font-sans text-brand-ink">
-        <section className="permit-success-wrap page-width">
-          <div className="success-panel">
-            <span className="permit-success-kicker">Application submitted</span>
-            <i aria-hidden="true">
-              <Check />
-            </i>
-            <h1>Application received</h1>
-            <p>Your new business permit application has been securely sent to the BPLO.</p>
-            <div className="permit-reference">
-              <small>Your reference number</small>
-              <b>BPLO-{Date.now().toString().slice(-7)}</b>
-            </div>
-            <div className="permit-success-actions">
-              <Link className="button" to="/services/bplo">
-                Return to BPLO
-              </Link>
-              <Link className="button button-outline" to="/services/bplo/apply">
-                Start another application
-              </Link>
-            </div>
-          </div>
-        </section>
-      </div>
-    )
-
-  const stepDetails = [
-    ['Applicant information', 'Tell us who is submitting this permit application.'],
-    ['Business information', 'Enter the details of the business you are registering.'],
-    ['Review and submit', 'Confirm that your application information is accurate.'],
-  ]
-
-  return (
-    <div className="permit-page min-h-screen bg-orange-50/30 font-sans text-brand-ink">
-      <section className="permit-hero text-center">
-        <div className="page-width">
-          <Link className="back-link" to="/services/bplo/requirements">
-            <ArrowLeft aria-hidden="true" /> Back to requirements
-          </Link>
-          <span className="permit-kicker">
-            <Sparkles aria-hidden="true" /> New Business Permit
-          </span>
-          <h1>Apply Online with Ease</h1>
-          <p>Complete three short steps to submit your business permit application securely.</p>
-        </div>
-      </section>
-
-      <section className="permit-content page-width">
-        <div className="stepper" aria-label={`Application step ${step} of 3`}>
-          {['Applicant', 'Business', 'Review'].map((label, index) => (
-            <span
-              className={step >= index + 1 ? 'active' : ''}
-              aria-current={step === index + 1 ? 'step' : undefined}
-              key={label}
-            >
-              <i>{step > index + 1 ? <Check /> : index + 1}</i>
-              <b>{label}</b>
-            </span>
-          ))}
-        </div>
-
-        <div className="permit-layout grid items-start">
-          <form className="form-card permit-form" onSubmit={handleSubmit}>
-            <div className="permit-form-heading">
-              <span className="eyebrow">Step {step} of 3</span>
-              <h2>{stepDetails[step - 1][0]}</h2>
-              <p>{stepDetails[step - 1][1]}</p>
-            </div>
-
-            {step === 1 && (
-              <div className="permit-fields">
-                <label>
-                  <span>Applicant name</span>
-                  <input required autoComplete="name" placeholder="Juan Dela Cruz" />
-                </label>
-                <label>
-                  <span>Email address</span>
-                  <input
-                    required
-                    type="email"
-                    autoComplete="email"
-                    placeholder="juan@example.com"
-                  />
-                </label>
-                <label>
-                  <span>Mobile number</span>
-                  <input required type="tel" autoComplete="tel" placeholder="09XX XXX XXXX" />
-                </label>
-              </div>
-            )}
-            {step === 2 && (
-              <div className="permit-fields">
-                <label>
-                  <span>Business name</span>
-                  <input required placeholder="Registered business name" />
-                </label>
-                <label>
-                  <span>Business type</span>
-                  <select>
-                    <option>Sole Proprietorship</option>
-                    <option>Partnership</option>
-                    <option>Corporation</option>
-                  </select>
-                </label>
-                <label className="permit-field-wide">
-                  <span>Business address</span>
-                  <textarea required rows={3} placeholder="Street, barangay, Bacolod City" />
-                </label>
-              </div>
-            )}
-            {step === 3 && (
-              <div className="review-box">
-                <span className="review-icon" aria-hidden="true">
-                  <Check />
-                </span>
-                <h3>Ready for submission</h3>
-                <p>
-                  By submitting this application, you confirm the information provided is complete
-                  and accurate.
-                </p>
-                <label className="check-line">
-                  <input required type="checkbox" />
-                  <span>I certify that the information is correct.</span>
-                </label>
-              </div>
-            )}
-            <div className="form-actions">
-              {step > 1 && (
-                <button
-                  type="button"
-                  className="button button-muted"
-                  onClick={() => setStep(step - 1)}
-                >
-                  <ArrowLeft aria-hidden="true" /> Back
-                </button>
-              )}
-              <button className="button">
-                {step === 3 ? 'Submit application' : 'Continue'} <ArrowRight aria-hidden="true" />
-              </button>
-            </div>
-          </form>
-
-          <aside className="permit-aside">
-            <span className="permit-aside-icon" aria-hidden="true">
-              <ShieldCheck />
-            </span>
-            <span className="eyebrow">Save time online</span>
-            <h2>Your application is secure</h2>
-            <p>Review your entries before continuing. Required fields are checked at every step.</p>
-            <ul>
-              {[
-                'Secure city submission',
-                'Guided three-step process',
-                'Reference number after submission',
-              ].map((item) => (
-                <li key={item}>
-                  <Check aria-hidden="true" /> {item}
-                </li>
-              ))}
-            </ul>
-            <div className="permit-help">
-              <b>Need assistance?</b>
-              <a href="tel:+63344349122">Call BPLO at (034) 434-9122</a>
-            </div>
-          </aside>
-        </div>
-
-        <div className="permit-privacy">
-          <span aria-hidden="true">
-            <ShieldCheck />
-          </span>
-          <p>Your information is used only to process your Bacolod City permit application.</p>
-        </div>
-      </section>
-    </div>
-  )
-}
-
-export { BploPage, PermitApplication, RequirementsPage }
+export { BploPage, RequirementsPage }
 export default ServicesPage
